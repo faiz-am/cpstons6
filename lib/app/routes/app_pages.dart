@@ -14,6 +14,9 @@ import '../modules/register/views/register_view.dart';
 import '../modules/rekomendasi/controllers/rekomendasi_controller.dart';
 import '../modules/rekomendasi/views/rekomendasi_view.dart';
 import '../modules/riwayat/views/riwayat_view.dart';
+import '../modules/scan/bindings/scan_binding.dart';
+import '../modules/scan/views/scan_view.dart';
+import '../modules/scan/controllers/scan_controller.dart';
 import '../modules/settings/views/settings_view.dart';
 
 part 'app_routes.dart';
@@ -28,8 +31,17 @@ class AppPages {
     GetPage(
       name: _Paths.MAIN_NAV,
       page: () => const MainNavView(),
+
       binding: BindingsBuilder(() {
-        Get.lazyPut(() => MainNavController());
+
+        Get.put(
+          MainNavController(),
+        );
+
+        Get.put(
+          ScanController(),
+        );
+
       }),
     ),
 
@@ -67,6 +79,11 @@ class AppPages {
       name: _Paths.INSIGHT,
       page: () => const InsightView(),
       binding: InsightBinding(),
+    ),
+    GetPage(
+      name: _Paths.SCAN,
+      page: () => const ScanView(),
+      binding: ScanBinding(),
     ),
   ];
 }

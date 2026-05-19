@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../controllers/insight_controller.dart';
 
-class InsightView extends GetView<InsightController> {
+class InsightView extends StatelessWidget {
   const InsightView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.put(InsightController());
+
     return Scaffold(
       backgroundColor: const Color(0xfff5f9ff),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
             final w = constraints.maxWidth;
-            final horizontal = w > 700 ? w * 0.12 : w * 0.05;
+
+            final horizontal =
+                w > 700 ? w * 0.12 : w * 0.05;
 
             return SingleChildScrollView(
               padding: EdgeInsets.symmetric(
@@ -21,10 +26,11 @@ class InsightView extends GetView<InsightController> {
                 vertical: 18,
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    "Insight",
+                    "Tips Sehat",
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w700,
@@ -35,7 +41,7 @@ class InsightView extends GetView<InsightController> {
                   const SizedBox(height: 6),
 
                   const Text(
-                    "Ringkasan dan rekomendasi gaya hidup sehat.",
+                    "Panduan sederhana untuk menjaga gaya hidup sehat setiap hari.",
                     style: TextStyle(
                       fontSize: 14,
                       color: Color(0xff64748b),
@@ -44,109 +50,43 @@ class InsightView extends GetView<InsightController> {
 
                   const SizedBox(height: 22),
 
-                  Obx(
-                    () => Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(22),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(26),
-                        gradient: const LinearGradient(
-                          colors: [
-                            Color(0xff2563eb),
-                            Color(0xff3b82f6),
-                          ],
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(
-                            Icons.lightbulb_outline,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(height: 14),
-                          Text(
-                            "Skor Sehat: ${controller.skorSehat.value}",
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            controller.insightText.value,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.white70,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  _headerCard(),
 
                   const SizedBox(height: 18),
 
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Obx(
-                          () => _metricCard(
-                            title: "Kalori",
-                            value: controller.kalori.value,
-                            icon: Icons.local_fire_department_outlined,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Obx(
-                          () => _metricCard(
-                            title: "Aktivitas",
-                            value: controller.aktivitas.value,
-                            icon: Icons.directions_run,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  Obx(() {
+                    if (controller.isLoading.value) {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
 
-                  const SizedBox(height: 18),
+                    if (controller.tips.isEmpty) {
+                      return const Center(
+                        child: Text(
+                          "Data tips kosong",
+                        ),
+                      );
+                    }
 
-                  Obx(
-                    () => Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(22),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            "Rekomendasi",
-                            style: TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xff0f172a),
-                            ),
+                    return Column(
+                      children:
+                          controller.tips.map((tip) {
+                        return Padding(
+                          padding:
+                              const EdgeInsets.only(
+                            bottom: 12,
                           ),
-                          const SizedBox(height: 12),
-                          ...controller.rekomendasi.map(
-                            (e) => Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: Text(
-                                "• $e",
-                                style: const TextStyle(fontSize: 14),
-                              ),
-                            ),
+                          child: _tipCard(
+                            icon: _getIcon(tip.icon),
+                            title: tip.title,
+                            description:
+                                tip.description,
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
+                        );
+                      }).toList(),
+                    );
+                  }),
 
                   const SizedBox(height: 24),
                 ],
@@ -158,43 +98,134 @@ class InsightView extends GetView<InsightController> {
     );
   }
 
-  Widget _metricCard({
-    required String title,
-    required String value,
-    required IconData icon,
-  }) {
+  Widget _headerCard() {
     return Container(
-      padding: const EdgeInsets.all(18),
+      width: double.infinity,
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(26),
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xff2563eb),
+            Color(0xff3b82f6),
+          ],
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: const Column(
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
           Icon(
-            icon,
-            color: const Color(0xff2563eb),
+            Icons.lightbulb_outline,
+            color: Colors.white,
           ),
-          const SizedBox(height: 12),
+
+          SizedBox(height: 14),
+
           Text(
-            value,
-            style: const TextStyle(
+            "For You",
+            style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: Color(0xff0f172a),
+              color: Colors.white,
             ),
           ),
-          const SizedBox(height: 4),
+
+          SizedBox(height: 8),
+
           Text(
-            title,
-            style: const TextStyle(
-              fontSize: 13,
-              color: Color(0xff64748b),
+            "Kebiasaan kecil yang konsisten setiap hari dapat membantu menjaga kesehatan tubuh dalam jangka panjang.",
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.white70,
             ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _tipCard({
+    required IconData icon,
+    required String title,
+    required String description,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Row(
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: const Color(0xffdbeafe),
+              borderRadius:
+                  BorderRadius.circular(14),
+            ),
+            child: Icon(
+              icon,
+              color: const Color(0xff2563eb),
+            ),
+          ),
+
+          const SizedBox(width: 14),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight:
+                        FontWeight.w700,
+                    color: Color(0xff0f172a),
+                  ),
+                ),
+
+                const SizedBox(height: 6),
+
+                Text(
+                  description,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Color(0xff64748b),
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getIcon(String icon) {
+    switch (icon) {
+      case 'water':
+        return Icons.water_drop_outlined;
+
+      case 'food':
+        return Icons.restaurant_outlined;
+
+      case 'walk':
+        return Icons.directions_walk_outlined;
+
+      case 'sleep':
+        return Icons.bedtime_outlined;
+
+      default:
+        return Icons.health_and_safety_outlined;
+    }
   }
 }
