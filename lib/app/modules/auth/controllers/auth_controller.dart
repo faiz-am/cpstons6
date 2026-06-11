@@ -10,7 +10,7 @@ class AuthController extends GetxController {
 
   final storage = const FlutterSecureStorage();
 
-  final String baseUrl = "http://192.168.1.5:5000";
+  final String baseUrl = "https://update-blatancy-comfort.ngrok-free.dev";
 
   RxBool isLoading = false.obs;
   RxBool isLoggedIn = false.obs;

@@ -4,7 +4,6 @@ import '../../auth/controllers/auth_controller.dart';
 
 import '../../home/views/home_view.dart';
 import '../../insight/views/insight_view.dart';
-import '../../scan/views/scan_view.dart';
 import '../../settings/views/settings_view.dart';
 
 import '../controllers/main_nav_controller.dart';
@@ -27,7 +26,6 @@ class MainNavView extends GetView<MainNavController> {
     final pages = const [
       HomeView(),
       InsightView(),
-      ScanView(),
       SettingsView(),
     ];
 
@@ -63,10 +61,7 @@ class MainNavView extends GetView<MainNavController> {
               label: "Tips",
             ),
 
-            BottomNavigationBarItem(
-              icon: Icon(Icons.camera_alt),
-              label: "Scan",
-            ),
+
 
             BottomNavigationBarItem(
               icon: Icon(Icons.settings),

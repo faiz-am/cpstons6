@@ -14,9 +14,7 @@ import '../modules/register/views/register_view.dart';
 import '../modules/rekomendasi/controllers/rekomendasi_controller.dart';
 import '../modules/rekomendasi/views/rekomendasi_view.dart';
 import '../modules/riwayat/views/riwayat_view.dart';
-import '../modules/scan/bindings/scan_binding.dart';
-import '../modules/scan/views/scan_view.dart';
-import '../modules/scan/controllers/scan_controller.dart';
+import '../modules/riwayat/bindings/riwayat_binding.dart';
 import '../modules/settings/views/settings_view.dart';
 
 part 'app_routes.dart';
@@ -38,9 +36,7 @@ class AppPages {
           MainNavController(),
         );
 
-        Get.put(
-          ScanController(),
-        );
+        
 
       }),
     ),
@@ -64,7 +60,12 @@ class AppPages {
     ),
 
     GetPage(name: _Paths.SETTINGS, page: () => const SettingsView()),
-    GetPage(name: _Paths.RIWAYAT, page: () => const RiwayatView()),
+    GetPage(
+      name: _Paths.RIWAYAT,
+      page: () => const RiwayatView(),
+      binding: RiwayatBinding(),
+    ),
+    
     GetPage(
       name: _Paths.LOGIN,
       page: () => const LoginView(),
@@ -80,10 +81,6 @@ class AppPages {
       page: () => const InsightView(),
       binding: InsightBinding(),
     ),
-    GetPage(
-      name: _Paths.SCAN,
-      page: () => const ScanView(),
-      binding: ScanBinding(),
-    ),
+    
   ];
 }
