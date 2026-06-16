@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../../routes/app_pages.dart';
 
+<<<<<<< HEAD
 /// Widget logo Google berwarna resmi menggunakan CustomPainter
 class GoogleLogoIcon extends StatelessWidget {
   final double size;
@@ -102,6 +103,8 @@ class _GoogleLogoPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
+=======
+>>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
 class LoginView extends StatelessWidget {
 
   const LoginView({super.key});
@@ -154,7 +157,11 @@ class LoginView extends StatelessWidget {
               TextField(
                 controller: usernameC,
                 decoration: const InputDecoration(
+<<<<<<< HEAD
                   labelText: "Email",
+=======
+                  labelText: "Username",
+>>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -197,6 +204,7 @@ class LoginView extends StatelessWidget {
                 );
               }),
 
+<<<<<<< HEAD
               const SizedBox(height: 16),
 
               Row(
@@ -245,6 +253,8 @@ class LoginView extends StatelessWidget {
 
               const SizedBox(height: 8),
 
+=======
+>>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
               TextButton(
                 onPressed: () {
                   Get.toNamed(Routes.REGISTER);

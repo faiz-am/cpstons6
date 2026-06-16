@@ -16,7 +16,10 @@ import '../modules/rekomendasi/views/rekomendasi_view.dart';
 import '../modules/riwayat/views/riwayat_view.dart';
 import '../modules/riwayat/bindings/riwayat_binding.dart';
 import '../modules/settings/views/settings_view.dart';
+<<<<<<< HEAD
 import '../modules/auth/views/verify_otp_view.dart';
+=======
+>>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
 
 part 'app_routes.dart';
 
@@ -82,9 +85,13 @@ class AppPages {
       page: () => const InsightView(),
       binding: InsightBinding(),
     ),
+<<<<<<< HEAD
     GetPage(
       name: _Paths.VERIFY_OTP,
       page: () => VerifyOtpView(),
     ),
+=======
+    
+>>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
   ];
 }

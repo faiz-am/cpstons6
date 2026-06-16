@@ -53,7 +53,11 @@ class RegisterView extends StatelessWidget {
               TextField(
                 controller: usernameC,
                 decoration: const InputDecoration(
+<<<<<<< HEAD
                   labelText: "Email",
+=======
+                  labelText: "Username",
+>>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -95,11 +99,22 @@ class RegisterView extends StatelessWidget {
                               return;
                             }
 
+<<<<<<< HEAD
                             // Navigasi ke OTP page sudah ditangani di dalam auth_controller.register()
                             await auth.register(
                               usernameC.text,
                               passwordC.text,
                             );
+=======
+                            final success = await auth.register(
+                              usernameC.text,
+                              passwordC.text,
+                            );
+
+                            if (success) {
+                              Get.offAllNamed('/login');
+                            }
+>>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
                           },
 
                     child: auth.isLoading.value
@@ -108,6 +123,7 @@ class RegisterView extends StatelessWidget {
                   ),
                 );
               }),
+<<<<<<< HEAD
 
               const SizedBox(height: 16),
 
@@ -156,6 +172,8 @@ class RegisterView extends StatelessWidget {
                   ),
                 );
               }),
+=======
+>>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
             ],
           ),
         ),

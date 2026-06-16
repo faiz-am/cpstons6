@@ -39,9 +39,12 @@ dependencies:
   flutter_secure_storage: ^8.0.0
   image_picker: ^1.1.2
   flutter_typeahead: ^5.2.0
+<<<<<<< HEAD
   firebase_core: ^2.27.0
   firebase_auth: ^4.17.8
   google_sign_in: ^6.2.1
+=======
+>>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
 
 dev_dependencies:
   flutter_test:
