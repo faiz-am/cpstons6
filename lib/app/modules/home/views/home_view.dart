@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../routes/app_pages.dart';
-<<<<<<< HEAD
 import '../../settings/controllers/settings_controller.dart';
-=======
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
 
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
     final settingsCtrl = Get.find<SettingsController>();
 
     return Obx(() {
@@ -36,23 +32,6 @@ class HomeView extends StatelessWidget {
                   isScrollControlled: true,
                 );
               },
-=======
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final w = constraints.maxWidth;
-        final horizontal = w > 700 ? w * 0.12 : w * 0.05;
-
-        return Scaffold(
-          backgroundColor: const Color(0xfff5f9ff),
-          floatingActionButton: FloatingActionButton(
-            backgroundColor: const Color(0xff2563eb),
-            onPressed: () {
-              Get.bottomSheet(
-                _chatBot(),
-                isScrollControlled: true,
-              );
-            },
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
             child: const Icon(
               Icons.chat,
               color: Colors.white,
@@ -69,7 +48,6 @@ class HomeView extends StatelessWidget {
                 children: [
                   const SizedBox(height: 6),
 
-<<<<<<< HEAD
                     Text(
                       "Dashboard",
                       style: TextStyle(
@@ -139,94 +117,21 @@ class HomeView extends StatelessWidget {
   }
 
   Widget _overviewCard(Color cardBg, Color textMain, Color textMuted, bool isDark) {
-=======
-                  const Text(
-                    "Dashboard",
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xff0f172a),
-                    ),
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  const Text(
-                    "Pantau aktivitas sehat harianmu.",
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xff64748b),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  _overviewCard(),
-
-                  const SizedBox(height: 18),
-
-                  _insightCard(),
-
-                  const SizedBox(height: 18),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _smallCard(
-                          title: "Hydration",
-                          value: "1.8 / 2.5L",
-                          subtitle: "72% tercapai",
-                          icon: Icons.water_drop_outlined,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _smallCard(
-                          title: "Aktivitas",
-                          value: "45 mins",
-                          subtitle: "Goal achieved",
-                          icon: Icons.directions_run,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _overviewCard() {
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-<<<<<<< HEAD
         color: cardBg,
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
           color: isDark ? const Color(0xff1e293b) : Colors.transparent,
           width: 1,
         ),
-=======
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-<<<<<<< HEAD
           Row(
-=======
-          const Row(
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
@@ -234,7 +139,6 @@ class HomeView extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
-<<<<<<< HEAD
                   color: textMain,
                 ),
               ),
@@ -242,13 +146,6 @@ class HomeView extends StatelessWidget {
                 backgroundColor: isDark ? const Color(0xff1e293b) : null,
                 side: BorderSide.none,
                 label: Text("Today", style: TextStyle(color: textMain)),
-=======
-                  color: Color(0xff0f172a),
-                ),
-              ),
-              Chip(
-                label: Text("Today"),
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
               ),
             ],
           ),
@@ -267,11 +164,7 @@ class HomeView extends StatelessWidget {
                     width: 7,
                   ),
                 ),
-<<<<<<< HEAD
                 child: Center(
-=======
-                child: const Center(
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -280,7 +173,6 @@ class HomeView extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.w700,
-<<<<<<< HEAD
                           color: textMain,
                         ),
                       ),
@@ -289,16 +181,6 @@ class HomeView extends StatelessWidget {
                         "Skor Sehat",
                         style: TextStyle(
                           color: textMuted,
-=======
-                          color: Color(0xff0f172a),
-                        ),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        "Skor Sehat",
-                        style: TextStyle(
-                          color: Color(0xff64748b),
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
                           fontSize: 12,
                         ),
                       ),
@@ -398,21 +280,14 @@ class HomeView extends StatelessWidget {
     required String value,
     required String subtitle,
     required IconData icon,
-<<<<<<< HEAD
     required Color cardBg,
     required Color textMain,
     required Color textMuted,
-=======
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
   }) {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-<<<<<<< HEAD
         color: cardBg,
-=======
-        color: Colors.white,
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
         borderRadius: BorderRadius.circular(22),
       ),
       child: Column(
@@ -425,45 +300,26 @@ class HomeView extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             title,
-<<<<<<< HEAD
             style: TextStyle(
               fontSize: 13,
               color: textMuted,
-=======
-            style: const TextStyle(
-              fontSize: 13,
-              color: Color(0xff64748b),
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
             ),
           ),
           const SizedBox(height: 6),
           Text(
             value,
-<<<<<<< HEAD
             style: TextStyle(
               fontSize: 19,
               fontWeight: FontWeight.w700,
               color: textMain,
-=======
-            style: const TextStyle(
-              fontSize: 19,
-              fontWeight: FontWeight.w700,
-              color: Color(0xff0f172a),
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
             ),
           ),
           const SizedBox(height: 4),
           Text(
             subtitle,
-<<<<<<< HEAD
             style: TextStyle(
               fontSize: 12,
               color: textMuted,
-=======
-            style: const TextStyle(
-              fontSize: 12,
-              color: Color(0xff64748b),
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
             ),
           ),
         ],
@@ -471,25 +327,15 @@ class HomeView extends StatelessWidget {
     );
   }
 
-<<<<<<< HEAD
   Widget _chatBot(Color cardBg, Color textMain, Color textMuted, bool isDark) {
-=======
-  Widget _chatBot() {
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
     final c = TextEditingController();
 
     return Container(
       height: Get.height * 0.65,
       padding: const EdgeInsets.all(18),
-<<<<<<< HEAD
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: const BorderRadius.vertical(
-=======
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
           top: Radius.circular(24),
         ),
       ),
@@ -506,37 +352,23 @@ class HomeView extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-<<<<<<< HEAD
           Text(
-=======
-          const Text(
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
             "Chatbot Kesehatan",
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-<<<<<<< HEAD
               color: textMain,
-=======
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
             ),
           ),
 
           const SizedBox(height: 14),
 
-<<<<<<< HEAD
           Expanded(
-=======
-          const Expanded(
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
             child: Align(
               alignment: Alignment.topLeft,
               child: Text(
                 "Halo 👋 Ada yang bisa saya bantu?",
-<<<<<<< HEAD
                 style: TextStyle(color: textMain),
-=======
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
               ),
             ),
           ),
@@ -546,19 +378,12 @@ class HomeView extends StatelessWidget {
               Expanded(
                 child: TextField(
                   controller: c,
-<<<<<<< HEAD
                   style: TextStyle(color: textMain),
                   decoration: InputDecoration(
                     hintText: "Tulis pesan...",
                     hintStyle: const TextStyle(color: Colors.grey),
                     filled: true,
                     fillColor: isDark ? const Color(0xff080c14) : const Color(0xfff1f5f9),
-=======
-                  decoration: InputDecoration(
-                    hintText: "Tulis pesan...",
-                    filled: true,
-                    fillColor: const Color(0xfff1f5f9),
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide: BorderSide.none,
@@ -595,7 +420,6 @@ class _MetricItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
     final settingsCtrl = Get.find<SettingsController>();
 
     return Obx(() {
@@ -646,47 +470,5 @@ class _MetricItem extends StatelessWidget {
         ],
       );
     });
-=======
-    return Row(
-      children: [
-        Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            color: const Color(0xffdbeafe),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Icon(
-            icon,
-            color: const Color(0xff2563eb),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xff64748b),
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xff0f172a),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
   }
 }

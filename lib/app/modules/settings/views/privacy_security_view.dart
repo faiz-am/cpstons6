@@ -379,7 +379,7 @@ class _PrivacySecurityViewState extends State<PrivacySecurityView> {
       trailing: Switch(
         value: value,
         onChanged: onChanged,
-        activeColor: const Color(0xff2563eb),
+        activeThumbColor: const Color(0xff2563eb),
       ),
     );
   }

@@ -76,7 +76,7 @@ class InputView extends GetView<InputController> {
                 Expanded(
                   child: Obx(
                     () => DropdownButtonFormField<String>(
-                      value: controller.aktivitas.value,
+                      initialValue: controller.aktivitas.value,
                       decoration: _inputDecoration(
                         "Aktivitas",
                         Icons.directions_run,
@@ -140,7 +140,7 @@ class InputView extends GetView<InputController> {
 
             Obx(
               () => DropdownButtonFormField<String>(
-                value: controller.penyakit.value,
+                initialValue: controller.penyakit.value,
                 decoration: _inputDecoration(
                   "Pilih Penyakit",
                   Icons.health_and_safety,

@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-<<<<<<< HEAD
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:get/get.dart';
@@ -21,30 +20,15 @@ import '../../../routes/app_pages.dart';
 const String _webClientId =
     '875638165481-hpnqk2mjsj1mguen4tl4blpfudk2tqfu.apps.googleusercontent.com';
 
-=======
-import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
-import '../../../routes/app_pages.dart';
-
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
 class AuthController extends GetxController {
 
   final storage = const FlutterSecureStorage();
 
-<<<<<<< HEAD
   final String baseUrl = "http://127.0.0.1:5000";
 
   RxBool isLoading = false.obs;
   RxBool isLoggedIn = false.obs;
   RxString userEmail = "".obs;
-=======
-  final String baseUrl = "https://update-blatancy-comfort.ngrok-free.dev";
-
-  RxBool isLoading = false.obs;
-  RxBool isLoggedIn = false.obs;
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
 
   String? token;
 
@@ -59,12 +43,9 @@ class AuthController extends GetxController {
     token = await storage.read(key: "token");
 
     isLoggedIn.value = token != null;
-<<<<<<< HEAD
     if (isLoggedIn.value) {
       userEmail.value = await storage.read(key: "username") ?? "";
     }
-=======
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
   }
 
   // =========================
@@ -78,13 +59,9 @@ class AuthController extends GetxController {
 
       final response = await http.post(
         Uri.parse("$baseUrl/api/login"),
-<<<<<<< HEAD
         headers: {
           "Content-Type": "application/json",
         },
-=======
-        headers: {"Content-Type": "application/json"},
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
         body: jsonEncode({
           "username": username,
           "password": password,
@@ -102,15 +79,12 @@ class AuthController extends GetxController {
           value: token,
         );
 
-<<<<<<< HEAD
         await storage.write(
           key: "username",
           value: username,
         );
 
         userEmail.value = username;
-=======
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
         isLoggedIn.value = true;
 
         Get.offAllNamed(Routes.MAIN_NAV);
@@ -126,11 +100,7 @@ class AuthController extends GetxController {
   }
 
   // =========================
-<<<<<<< HEAD
   // REGISTER
-=======
-  // REGISTER (FIXED)
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
   // =========================
   Future<bool> register(String username, String password) async {
 
@@ -140,13 +110,9 @@ class AuthController extends GetxController {
 
       final response = await http.post(
         Uri.parse("$baseUrl/api/register"),
-<<<<<<< HEAD
         headers: {
           "Content-Type": "application/json",
         },
-=======
-        headers: {"Content-Type": "application/json"},
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
         body: jsonEncode({
           "username": username,
           "password": password,
@@ -156,7 +122,6 @@ class AuthController extends GetxController {
       final data = jsonDecode(response.body);
 
       if (data['success']) {
-<<<<<<< HEAD
         // Navigasi ke halaman verifikasi OTP, bawa email sebagai argument
         Get.toNamed(Routes.VERIFY_OTP, arguments: username);
         return true;
@@ -167,15 +132,6 @@ class AuthController extends GetxController {
           backgroundColor: Colors.red,
           colorText: Colors.white,
         );
-=======
-
-        Get.snackbar("Success", data['message']);
-        return true;
-
-      } else {
-
-        Get.snackbar("Error", data['message']);
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
         return false;
       }
 
@@ -191,7 +147,6 @@ class AuthController extends GetxController {
   }
 
   // =========================
-<<<<<<< HEAD
   // VERIFY OTP
   // =========================
   Future<void> verifyOTP(String username, String otp) async {
@@ -327,20 +282,14 @@ class AuthController extends GetxController {
   }
 
   // =========================
-=======
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
   // LOGOUT
   // =========================
   Future<void> logout() async {
 
     await storage.delete(key: "token");
-<<<<<<< HEAD
     await storage.delete(key: "username");
 
     userEmail.value = "";
-=======
-
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
     token = null;
     isLoggedIn.value = false;
 
