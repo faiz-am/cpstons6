@@ -11,10 +11,7 @@ abstract class Routes {
   static const LOGIN = _Paths.LOGIN;
   static const REGISTER = _Paths.REGISTER;
   static const INSIGHT = _Paths.INSIGHT;
-<<<<<<< HEAD
   static const VERIFY_OTP = _Paths.VERIFY_OTP;
-=======
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
 }
 
 abstract class _Paths {
@@ -28,8 +25,5 @@ abstract class _Paths {
   static const LOGIN = '/login';
   static const REGISTER = '/register';
   static const INSIGHT = '/insight';
-<<<<<<< HEAD
   static const VERIFY_OTP = '/verify-otp';
-=======
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
 }

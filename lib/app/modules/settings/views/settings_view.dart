@@ -2,12 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../routes/app_pages.dart';
 import 'package:sehat_app/app/modules/auth/controllers/auth_controller.dart';
-<<<<<<< HEAD
 import '../controllers/settings_controller.dart';
 import 'profile_settings_view.dart';
 import 'privacy_security_view.dart';
-=======
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -15,7 +12,6 @@ class SettingsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = Get.find<AuthController>();
-<<<<<<< HEAD
     final controller = Get.put(SettingsController());
 
     return Obx(() {
@@ -164,131 +160,6 @@ class SettingsView extends StatelessWidget {
 
   Widget _sectionCard({
     required Color cardBg,
-=======
-
-    return Scaffold(
-      backgroundColor: const Color(0xfff5f9ff),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final w = constraints.maxWidth;
-            final horizontal = w > 700 ? w * 0.12 : w * 0.05;
-
-            return SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
-                horizontal: horizontal,
-                vertical: 18,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Settings",
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xff0f172a),
-                    ),
-                  ),
-
-                  const SizedBox(height: 6),
-
-                  const Text(
-                    "Kelola preferensi dan akun aplikasi.",
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xff64748b),
-                    ),
-                  ),
-
-                  const SizedBox(height: 22),
-
-                  const Text(
-                    "Account",
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Color(0xff64748b),
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  _sectionCard(
-                    children: [
-                      _item(
-                        icon: Icons.history,
-                        title: "Riwayat",
-                        onTap: () {
-                          Get.toNamed(Routes.RIWAYAT);
-                        },
-                      ),
-                      _divider(),
-                      _item(
-                        icon: Icons.person_outline,
-                        title: "Profil",
-                        onTap: () {},
-                      ),
-                      _divider(),
-                      _item(
-                        icon: Icons.security,
-                        title: "Privasi & Keamanan",
-                        onTap: () {},
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  const Text(
-                    "Preferences",
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Color(0xff64748b),
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  _sectionCard(
-                    children: [
-                      _switchItem(
-                        icon: Icons.notifications_none,
-                        title: "Notifikasi",
-                        value: true,
-                      ),
-                      _divider(),
-                      _switchItem(
-                        icon: Icons.dark_mode_outlined,
-                        title: "Dark Mode",
-                        value: false,
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  _sectionCard(
-                    children: [
-                      _logoutItem(
-                        onTap: () {
-                          auth.logout();
-                        },
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _sectionCard({
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
     required List<Widget> children,
   }) {
     return Container(
@@ -298,11 +169,7 @@ class SettingsView extends StatelessWidget {
         vertical: 8,
       ),
       decoration: BoxDecoration(
-<<<<<<< HEAD
         color: cardBg,
-=======
-        color: Colors.white,
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
         borderRadius: BorderRadius.circular(22),
       ),
       child: Column(
@@ -314,10 +181,7 @@ class SettingsView extends StatelessWidget {
   Widget _item({
     required IconData icon,
     required String title,
-<<<<<<< HEAD
     required Color textMain,
-=======
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
     required VoidCallback onTap,
   }) {
     return ListTile(
@@ -337,17 +201,10 @@ class SettingsView extends StatelessWidget {
       ),
       title: Text(
         title,
-<<<<<<< HEAD
         style: TextStyle(
           fontSize: 15,
           fontWeight: FontWeight.w500,
           color: textMain,
-=======
-        style: const TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
-          color: Color(0xff0f172a),
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
         ),
       ),
       trailing: const Icon(
@@ -361,13 +218,9 @@ class SettingsView extends StatelessWidget {
   Widget _switchItem({
     required IconData icon,
     required String title,
-<<<<<<< HEAD
     required Color textMain,
     required bool value,
     required ValueChanged<bool> onChanged,
-=======
-    required bool value,
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
   }) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
@@ -386,26 +239,16 @@ class SettingsView extends StatelessWidget {
       ),
       title: Text(
         title,
-<<<<<<< HEAD
         style: TextStyle(
           fontSize: 15,
           fontWeight: FontWeight.w500,
           color: textMain,
-=======
-        style: const TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
         ),
       ),
       trailing: Switch(
         value: value,
-<<<<<<< HEAD
         onChanged: onChanged,
-        activeColor: const Color(0xff2563eb),
-=======
-        onChanged: (_) {},
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
+        activeThumbColor: const Color(0xff2563eb),
       ),
     );
   }
@@ -440,17 +283,10 @@ class SettingsView extends StatelessWidget {
     );
   }
 
-<<<<<<< HEAD
   Widget _divider(Color dividerCol) {
     return Divider(
       height: 1,
       color: dividerCol,
-=======
-  Widget _divider() {
-    return const Divider(
-      height: 1,
-      color: Color(0xffe2e8f0),
->>>>>>> ba9cdaa90c21893f7a113c4320b66a26f53446af
     );
   }
 }
