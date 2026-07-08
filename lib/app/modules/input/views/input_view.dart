@@ -149,6 +149,9 @@ class InputView extends GetView<InputController> {
     required RxString foodObs,
     required String type,
   }) {
+    // Kita buat variabel penampung local controller agar bisa diakses di onSelected
+    TextEditingController? internalController;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

@@ -60,10 +60,8 @@ class RekomendasiController extends GetxController {
         // FUNGSI HELPER SUPER AMAN: Kebal dari "Invalid double" & spasi liar
         double ambilAngka(dynamic nilai) {
           if (nilai == null) return 0.0;
-          // Jika sudah bertipe num/int/double, langsung kembalikan nilainya
           if (nilai is num) return nilai.toDouble();
           
-          // Jika bertipe String, bersihkan spasi lalu parsing secara aman
           String teksAngka = nilai.toString().trim();
           return double.tryParse(teksAngka) ?? 0.0;
         }
@@ -150,7 +148,7 @@ class RekomendasiController extends GetxController {
           colorText: Colors.white,
         );
 
-        // Arahkan kembali ke halaman utama (Dashboard & Riwayat) setelah berhasil menyimpan
+        // Arahkan kembali ke halaman utama setelah berhasil menyimpan
         Future.delayed(const Duration(seconds: 1), () {
           Get.offAllNamed('/main-nav');
         });
