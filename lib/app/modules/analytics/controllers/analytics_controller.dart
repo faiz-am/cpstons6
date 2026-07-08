@@ -4,6 +4,7 @@ import '../../auth/controllers/auth_controller.dart';
 
 class AnalyticsController extends GetxController {
   final isLoading = false.obs;
+  final isFoodsLoading = false.obs;
   final String baseUrl = "http://127.0.0.1:5000/api";
   final GetConnect _connect = GetConnect();
 
@@ -11,6 +12,7 @@ class AnalyticsController extends GetxController {
   final bigDataSummary = <String, dynamic>{}.obs;
   final topCaloriesFoods = <Map<String, dynamic>>[].obs;
   final topProteinFoods = <Map<String, dynamic>>[].obs;
+  final bigDataFoods = <Map<String, dynamic>>[].obs;
 
   // User History state
   final userHistoryList = <RiwayatModel>[].obs;
@@ -40,7 +42,10 @@ class AnalyticsController extends GetxController {
         topProteinFoods.value = rawProt.map((e) => Map<String, dynamic>.from(e)).toList();
       }
 
-      // 2. Fetch User History Data
+      // 2. Fetch Big Data Foods list
+      await fetchBigDataFoods("");
+
+      // 3. Fetch User History Data
       final historyResponse = await _connect.get('$baseUrl/ambil-riwayat?username=$email');
       if (historyResponse.status.hasError) {
         print("Error fetching User History from backend");
@@ -52,6 +57,23 @@ class AnalyticsController extends GetxController {
       print("Error in AnalyticsController: $e");
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> fetchBigDataFoods(String search) async {
+    try {
+      isFoodsLoading.value = true;
+      final response = await _connect.get('$baseUrl/bigdata/foods?search=$search');
+      if (response.status.hasError) {
+        print("Error fetching Big Data Foods from backend");
+      } else if (response.body != null && response.body['success'] == true) {
+        final List rawFoods = response.body['foods'] ?? [];
+        bigDataFoods.value = rawFoods.map((e) => Map<String, dynamic>.from(e)).toList();
+      }
+    } catch (e) {
+      print("Error in fetchBigDataFoods: $e");
+    } finally {
+      isFoodsLoading.value = false;
     }
   }
 }
