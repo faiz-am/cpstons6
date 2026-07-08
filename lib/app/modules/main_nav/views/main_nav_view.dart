@@ -5,6 +5,7 @@ import '../../settings/controllers/settings_controller.dart';
 
 import '../../home/views/home_view.dart';
 import '../../insight/views/insight_view.dart';
+import '../../analytics/views/analytics_view.dart';
 import '../../settings/views/settings_view.dart';
 
 import '../controllers/main_nav_controller.dart';
@@ -17,7 +18,7 @@ class MainNavView extends GetView<MainNavController> {
   Widget build(BuildContext context) {
 
     final auth = Get.find<AuthController>();
-    final settingsCtrl = Get.put(SettingsController());
+    final settingsCtrl = Get.find<SettingsController>();
 
     if (!auth.isLoggedIn.value) {
       Future.microtask(() {
@@ -28,6 +29,7 @@ class MainNavView extends GetView<MainNavController> {
     final pages = const [
       HomeView(),
       InsightView(),
+      AnalyticsView(),
       SettingsView(),
     ];
 
@@ -51,6 +53,7 @@ class MainNavView extends GetView<MainNavController> {
 
           selectedItemColor: const Color(0xff2563eb),
           unselectedItemColor: const Color(0xff94a3b8),
+          type: BottomNavigationBarType.fixed,
 
           items: const [
 
@@ -64,7 +67,10 @@ class MainNavView extends GetView<MainNavController> {
               label: "Tips",
             ),
 
-
+            BottomNavigationBarItem(
+              icon: Icon(Icons.bar_chart_rounded),
+              label: "Analytics",
+            ),
 
             BottomNavigationBarItem(
               icon: Icon(Icons.settings),

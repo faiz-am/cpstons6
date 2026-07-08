@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:sehat_app/app/modules/auth/controllers/auth_controller.dart';
 
 class ProfileSettingsView extends StatefulWidget {
@@ -19,6 +21,9 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
   final weightController = TextEditingController();
 
   bool _isLoading = false;
+  bool isEditingPersonal = false;
+  bool isEditingPhysical = false;
+  String? _base64Image;
 
   @override
   void initState() {
@@ -27,40 +32,125 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
   }
 
   Future<void> _loadProfileData() async {
-    final name = await auth.storage.read(key: "profile_name") ?? "";
-    final phone = await auth.storage.read(key: "profile_phone") ?? "";
-    final age = await auth.storage.read(key: "profile_age") ?? "";
-    final height = await auth.storage.read(key: "profile_height") ?? "";
-    final weight = await auth.storage.read(key: "profile_weight") ?? "";
+    try {
+      final email = auth.userEmail.value;
+      if (email.isEmpty) return;
 
-    setState(() {
-      nameController.text = name;
-      phoneController.text = phone;
-      ageController.text = age;
-      heightController.text = height;
-      weightController.text = weight;
-    });
+      final name = await auth.storage.read(key: "${email}_profile_name") ?? "";
+      final phone = await auth.storage.read(key: "${email}_profile_phone") ?? "";
+      final age = await auth.storage.read(key: "${email}_profile_age") ?? "";
+      final height = await auth.storage.read(key: "${email}_profile_height") ?? "";
+      final weight = await auth.storage.read(key: "${email}_profile_weight") ?? "";
+      final imageBase64 = await auth.storage.read(key: "${email}_profile_image") ?? "";
+
+      setState(() {
+        nameController.text = name;
+        phoneController.text = phone;
+        ageController.text = age;
+        heightController.text = height;
+        weightController.text = weight;
+        _base64Image = imageBase64.isNotEmpty ? imageBase64 : null;
+      });
+    } catch (e) {
+      print("Error loading profile data: $e");
+    }
   }
 
   Future<void> _saveProfileData() async {
-    setState(() => _isLoading = true);
+    try {
+      setState(() => _isLoading = true);
 
-    await auth.storage.write(key: "profile_name", value: nameController.text.trim());
-    await auth.storage.write(key: "profile_phone", value: phoneController.text.trim());
-    await auth.storage.write(key: "profile_age", value: ageController.text.trim());
-    await auth.storage.write(key: "profile_height", value: heightController.text.trim());
-    await auth.storage.write(key: "profile_weight", value: weightController.text.trim());
+      final email = auth.userEmail.value;
+      if (email.isEmpty) {
+        throw Exception("Email pengguna tidak ditemukan. Silakan login kembali.");
+      }
 
-    setState(() => _isLoading = false);
+      await auth.storage.write(key: "${email}_profile_name", value: nameController.text.trim());
+      await auth.storage.write(key: "${email}_profile_phone", value: phoneController.text.trim());
+      await auth.storage.write(key: "${email}_profile_age", value: ageController.text.trim());
+      await auth.storage.write(key: "${email}_profile_height", value: heightController.text.trim());
+      await auth.storage.write(key: "${email}_profile_weight", value: weightController.text.trim());
 
-    Get.snackbar(
-      "Profil Disimpan",
-      "Perubahan profil Anda berhasil disimpan secara aman.",
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: const Color(0xff10b981),
-      colorText: Colors.white,
-      duration: const Duration(seconds: 2),
-    );
+      if (_base64Image != null) {
+        await auth.storage.write(key: "${email}_profile_image", value: _base64Image);
+      }
+
+      setState(() {
+        _isLoading = false;
+        isEditingPersonal = false;
+        isEditingPhysical = false;
+      });
+
+      Get.snackbar(
+        "Profil Disimpan",
+        "Perubahan profil Anda berhasil disimpan secara aman.",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xff10b981),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 2),
+      );
+    } catch (e) {
+      setState(() => _isLoading = false);
+      Get.snackbar(
+        "Gagal Menyimpan",
+        "Terjadi kesalahan saat menyimpan data: $e",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+    }
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 400,
+        maxHeight: 400,
+        imageQuality: 70,
+      );
+      if (image != null) {
+        final bytes = await image.readAsBytes();
+        final base64Str = base64Encode(bytes);
+        setState(() {
+          _base64Image = base64Str;
+        });
+
+        final email = auth.userEmail.value;
+        if (email.isNotEmpty) {
+          await auth.storage.write(key: "${email}_profile_image", value: base64Str);
+        }
+
+        Get.snackbar(
+          "Foto Diperbarui",
+          "Foto profil berhasil diperbarui.",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xff10b981),
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        "Gagal Memilih Foto",
+        "Terjadi kesalahan saat memilih foto: $e",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  ImageProvider _getProfileImageProvider() {
+    if (_base64Image != null && _base64Image!.isNotEmpty) {
+      try {
+        return MemoryImage(base64Decode(_base64Image!));
+      } catch (e) {
+        print("Error decoding base64 image: $e");
+      }
+    }
+    return const AssetImage("images/default_avatar.png");
   }
 
   @override
@@ -112,8 +202,8 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
                             spreadRadius: 2,
                           )
                         ],
-                        image: const DecorationImage(
-                          image: AssetImage("images/default_avatar.png"),
+                        image: DecorationImage(
+                          image: _getProfileImageProvider(),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -128,15 +218,7 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
                       bottom: 0,
                       right: 0,
                       child: InkWell(
-                        onTap: () {
-                          Get.snackbar(
-                            "Ganti Foto",
-                            "Unggah foto profil didukung di platform web/ponsel Anda.",
-                            snackPosition: SnackPosition.BOTTOM,
-                            backgroundColor: primaryColor,
-                            colorText: Colors.white,
-                          );
-                        },
+                        onTap: _pickImage,
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
@@ -169,87 +251,217 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
               
               const SizedBox(height: 25),
 
-              // Form fields
+              // Card 1: Informasi Pribadi
               _buildCard(
                 isDark: isDark,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildInputField(
-                      label: "Nama Lengkap",
-                      controller: nameController,
-                      icon: Icons.person_outline,
-                      isDark: isDark,
+                child: isEditingPersonal 
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              "Edit Informasi Pribadi",
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xff2563eb),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  isEditingPersonal = false;
+                                  _loadProfileData(); // Reset data jika batal
+                                });
+                              },
+                              child: const Text("Batal", style: TextStyle(color: Colors.red)),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        _buildInputField(
+                          label: "Nama Lengkap",
+                          controller: nameController,
+                          icon: Icons.person_outline,
+                          isDark: isDark,
+                        ),
+                        const SizedBox(height: 18),
+                        _buildInputField(
+                          label: "Nomor Telepon",
+                          controller: phoneController,
+                          icon: Icons.phone_outlined,
+                          keyboardType: TextInputType.phone,
+                          isDark: isDark,
+                        ),
+                      ],
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              "Informasi Pribadi",
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xff2563eb),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  isEditingPersonal = true;
+                                });
+                              },
+                              icon: const Icon(Icons.edit_outlined, color: Color(0xff2563eb), size: 20),
+                              tooltip: "Edit Informasi Pribadi",
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        _buildDisplayRow(
+                          label: "Nama Lengkap",
+                          value: nameController.text.isNotEmpty ? nameController.text : "Belum diisi",
+                          icon: Icons.person_outline,
+                          isDark: isDark,
+                        ),
+                        const Divider(height: 24, thickness: 0.5),
+                        _buildDisplayRow(
+                          label: "Nomor Telepon",
+                          value: phoneController.text.isNotEmpty ? phoneController.text : "Belum diisi",
+                          icon: Icons.phone_outlined,
+                          isDark: isDark,
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 18),
-                    _buildInputField(
-                      label: "Nomor Telepon",
-                      controller: phoneController,
-                      icon: Icons.phone_outlined,
-                      keyboardType: TextInputType.phone,
-                      isDark: isDark,
-                    ),
-                  ],
-                ),
               ),
 
               const SizedBox(height: 18),
 
-              // Health Stats Card
+              // Card 2: Data Fisik & Kesehatan
               _buildCard(
                 isDark: isDark,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Data Fisik & Kesehatan",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xff2563eb),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
+                child: isEditingPhysical
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: _buildInputField(
-                            label: "Umur (Tahun)",
-                            controller: ageController,
-                            icon: Icons.calendar_today_outlined,
-                            keyboardType: TextInputType.number,
-                            isDark: isDark,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              "Edit Data Fisik & Kesehatan",
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xff2563eb),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  isEditingPhysical = false;
+                                  _loadProfileData(); // Reset data jika batal
+                                });
+                              },
+                              child: const Text("Batal", style: TextStyle(color: Colors.red)),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildInputField(
-                            label: "Tinggi (Cm)",
-                            controller: heightController,
-                            icon: Icons.height,
-                            keyboardType: TextInputType.number,
-                            isDark: isDark,
-                          ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildInputField(
+                                label: "Umur (Tahun)",
+                                controller: ageController,
+                                icon: Icons.calendar_today_outlined,
+                                keyboardType: TextInputType.number,
+                                isDark: isDark,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildInputField(
+                                label: "Tinggi (Cm)",
+                                controller: heightController,
+                                icon: Icons.height,
+                                keyboardType: TextInputType.number,
+                                isDark: isDark,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildInputField(
+                                label: "Berat (Kg)",
+                                controller: weightController,
+                                icon: Icons.monitor_weight_outlined,
+                                keyboardType: TextInputType.number,
+                                isDark: isDark,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildInputField(
-                            label: "Berat (Kg)",
-                            controller: weightController,
-                            icon: Icons.monitor_weight_outlined,
-                            keyboardType: TextInputType.number,
-                            isDark: isDark,
-                          ),
+                      ],
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              "Data Fisik & Kesehatan",
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xff2563eb),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  isEditingPhysical = true;
+                                });
+                              },
+                              icon: const Icon(Icons.edit_outlined, color: Color(0xff2563eb), size: 20),
+                              tooltip: "Edit Data Fisik",
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            _buildStatDisplay(
+                              label: "Umur",
+                              value: ageController.text.isNotEmpty ? "${ageController.text} Tahun" : "-",
+                              icon: Icons.calendar_today_outlined,
+                              isDark: isDark,
+                            ),
+                            _buildStatDisplay(
+                              label: "Tinggi",
+                              value: heightController.text.isNotEmpty ? "${heightController.text} Cm" : "-",
+                              icon: Icons.height,
+                              isDark: isDark,
+                            ),
+                            _buildStatDisplay(
+                              label: "Berat",
+                              value: weightController.text.isNotEmpty ? "${weightController.text} Kg" : "-",
+                              icon: Icons.monitor_weight_outlined,
+                              isDark: isDark,
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
               ),
 
               const SizedBox(height: 30),
 
-              // Action button
+              // Action button (selalu dapat diklik)
               SizedBox(
                 width: double.infinity,
                 height: 52,
@@ -302,6 +514,83 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
         ),
       ),
       child: child,
+    );
+  }
+
+  Widget _buildDisplayRow({
+    required String label,
+    required String value,
+    required IconData icon,
+    required bool isDark,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Icon(icon, color: const Color(0xff2563eb), size: 22),
+        const SizedBox(width: 14),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 11,
+                color: Colors.grey,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white : const Color(0xff0f172a),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatDisplay({
+    required String label,
+    required String value,
+    required IconData icon,
+    required bool isDark,
+  }) {
+    return Expanded(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xff080c14) : const Color(0xfff8fafc),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark ? const Color(0xff1e293b) : const Color(0xffe2e8f0),
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: const Color(0xff2563eb), size: 20),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: const TextStyle(color: Colors.grey, fontSize: 11),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: TextStyle(
+                color: isDark ? Colors.white : const Color(0xff0f172a),
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

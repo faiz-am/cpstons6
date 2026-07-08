@@ -16,6 +16,10 @@ import '../modules/rekomendasi/views/rekomendasi_view.dart';
 import '../modules/riwayat/views/riwayat_view.dart';
 import '../modules/riwayat/bindings/riwayat_binding.dart';
 import '../modules/settings/views/settings_view.dart';
+import '../modules/settings/controllers/settings_controller.dart';
+import '../modules/insight/controllers/insight_controller.dart';
+import '../modules/home/controllers/home_controller.dart';
+import '../modules/analytics/controllers/analytics_controller.dart';
 import '../modules/auth/views/verify_otp_view.dart';
 
 part 'app_routes.dart';
@@ -32,13 +36,11 @@ class AppPages {
       page: () => const MainNavView(),
 
       binding: BindingsBuilder(() {
-
-        Get.put(
-          MainNavController(),
-        );
-
-        
-
+        Get.put(MainNavController());
+        Get.put(HomeController());
+        Get.put(InsightController());
+        Get.put(SettingsController());
+        Get.put(AnalyticsController());
       }),
     ),
 

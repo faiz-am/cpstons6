@@ -12,7 +12,7 @@ class SettingsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = Get.find<AuthController>();
-    final controller = Get.put(SettingsController());
+    final controller = Get.find<SettingsController>();
 
     return Obx(() {
       final isDark = controller.isDarkModeEnabled.value;
