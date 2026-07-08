@@ -9,7 +9,7 @@ class InsightView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(InsightController());
+    final controller = Get.find<InsightController>();
     final settingsCtrl = Get.find<SettingsController>();
 
     return Obx(() {
