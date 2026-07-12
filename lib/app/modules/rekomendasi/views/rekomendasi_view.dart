@@ -155,7 +155,7 @@ class RekomendasiView extends GetView<RekomendasiController> {
               // ====================================================
               Center(
                 child: SizedBox(
-                  width: w * 0.9, // Lebar proporsional 90% layar
+                  width: double.infinity,
                   height: 50,
                   child: ElevatedButton.icon(
                     onPressed: () {
@@ -164,7 +164,9 @@ class RekomendasiView extends GetView<RekomendasiController> {
                     icon: const Icon(Icons.save_rounded, color: Colors.white),
                     label: const Text(
                       "SIMPAN KE RIWAYAT & BERANDA",
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: isBahaya ? Colors.red.shade600 : Colors.greenAccent.shade700,

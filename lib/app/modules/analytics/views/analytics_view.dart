@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -20,12 +22,16 @@ class AnalyticsView extends StatelessWidget {
       final textMuted = isDark ? Colors.white60 : const Color(0xff64748b);
       final borderColor = isDark ? const Color(0xff1e293b) : Colors.grey.shade200;
 
+      final double w = MediaQuery.of(context).size.width;
+      final bool isWide = w > 850;
+      final double paddingHorizontal = isWide ? w * 0.08 : 16.0;
+
       return Scaffold(
         backgroundColor: scaffoldBg,
         appBar: AppBar(
           title: Text(
-            "Dashboard Analitik",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: textMain),
+            "Dashboard Analitik Komparatif",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: textMain),
           ),
           centerTitle: true,
           elevation: 0,
@@ -42,24 +48,65 @@ class AnalyticsView extends StatelessWidget {
           child: controller.isLoading.value
               ? const Center(child: CircularProgressIndicator())
               : SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  padding: EdgeInsets.symmetric(horizontal: paddingHorizontal, vertical: 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Overview Header Section
+                      // Rangkuman Atas
                       _buildOverviewSection(controller, cardBg, textMain, textMuted, borderColor),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 24),
 
-                      // Chart 1: Bar Chart (Big Data - Top Calories)
-                      _buildBarChartSection(controller, cardBg, textMain, textMuted, borderColor, isDark),
-                      const SizedBox(height: 20),
+                      // =========================================================
+                      // KATEGORI 1: DATA INTERNAL USER (MYSQL)
+                      // =========================================================
+                      Text(
+                        "1. Analisis Data Internal (Aktivitas Konsumsi Anda)",
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: const Color(0xff10b981)),
+                      ),
+                      const SizedBox(height: 12),
+                      if (isWide)
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: _buildInternalLineChart(controller, cardBg, textMain, textMuted, borderColor, isDark)),
+                            const SizedBox(width: 16),
+                            Expanded(child: _buildInternalBarChart(controller, cardBg, textMain, textMuted, borderColor, isDark)),
+                          ],
+                        )
+                      else ...[
+                        _buildInternalLineChart(controller, cardBg, textMain, textMuted, borderColor, isDark),
+                        const SizedBox(height: 16),
+                        _buildInternalBarChart(controller, cardBg, textMain, textMuted, borderColor, isDark),
+                      ],
 
-                      // Chart 2: Pie Chart (Big Data - Health Distribution)
-                      _buildPieChartSection(controller, cardBg, textMain, textMuted, borderColor, isDark),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 28),
 
-                      // Chart 3: Line Chart (User Nutrition Progression)
-                      _buildLineChartSection(controller, cardBg, textMain, textMuted, borderColor, isDark),
+                      // =========================================================
+                      // KATEGORI 2: DATA EKSTERNAL DATASET (FATSECRET)
+                      // =========================================================
+                      Text(
+                        "2. Analisis Data Eksternal (Dataset Medis FatSecret)",
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: const Color(0xff2563eb)),
+                      ),
+                      const SizedBox(height: 12),
+                      if (isWide)
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: _buildExternalBarChart(controller, cardBg, textMain, textMuted, borderColor, isDark)),
+                            const SizedBox(width: 16),
+                            Expanded(child: _buildExternalPieChart(controller, cardBg, textMain, textMuted, borderColor, isDark)),
+                          ],
+                        )
+                      else ...[
+                        _buildExternalBarChart(controller, cardBg, textMain, textMuted, borderColor, isDark),
+                        const SizedBox(height: 16),
+                        _buildExternalPieChart(controller, cardBg, textMain, textMuted, borderColor, isDark),
+                      ],
+
+                      const SizedBox(height: 24),
+                      // Daftar Makanan Dataset
+                      _buildFoodsListSection(controller, cardBg, textMain, textMuted, borderColor, isDark),
                       const SizedBox(height: 24),
                     ],
                   ),
@@ -69,12 +116,10 @@ class AnalyticsView extends StatelessWidget {
     });
   }
 
-  // --- Overview Card ---
   Widget _buildOverviewSection(AnalyticsController controller, Color cardBg, Color textMain, Color textMuted, Color borderColor) {
     final summary = controller.bigDataSummary;
     final totalFoods = summary['total_foods'] ?? 0;
     final avgCal = summary['avg_calories'] ?? 0.0;
-    final avgProt = summary['avg_protein'] ?? 0.0;
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -82,34 +127,25 @@ class AnalyticsView extends StatelessWidget {
         color: cardBg,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.analytics_rounded, color: Color(0xff2563eb), size: 28),
+              const Icon(Icons.analytics_rounded, color: Color(0xff2563eb), size: 24),
               const SizedBox(width: 8),
-              Text(
-                "Rangkuman Big Data",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textMain),
-              ),
+              Text("Dashboard Analitik Skripsi", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textMain)),
             ],
           ),
           const SizedBox(height: 14),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            spacing: 16,
+            runSpacing: 12,
             children: [
-              _buildStatCol("Total Makanan", "$totalFoods item", textMain, textMuted),
-              _buildStatCol("Rata-rata Kalori", "${avgCal} kcal", textMain, textMuted),
-              _buildStatCol("Rata-rata Protein", "${avgProt}g", textMain, textMuted),
+              _buildStatCol("Total Data Sampel", "$totalFoods item", textMain, textMuted),
+              _buildStatCol("Rata-rata Energi Kalori", "${avgCal} kcal", textMain, textMuted),
+              _buildStatCol("Riwayat Log Internal", "${controller.userHistoryList.length} Hari", textMain, textMuted),
             ],
           )
         ],
@@ -121,367 +157,389 @@ class AnalyticsView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontSize: 12, color: textMuted)),
+        Text(label, style: TextStyle(fontSize: 11, color: textMuted)),
         const SizedBox(height: 4),
-        Text(val, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: textMain)),
+        Text(val, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: textMain)),
       ],
     );
   }
 
-  // --- CHART 1: BAR CHART (BIG DATA) ---
-  Widget _buildBarChartSection(AnalyticsController controller, Color cardBg, Color textMain, Color textMuted, Color borderColor, bool isDark) {
-    final foods = controller.topCaloriesFoods;
+  // =========================================================================
+  // GRAPH 1 (INTERNAL): LINE CHART - PROGRESS SKOR USER
+  // =========================================================================
+  Widget _buildInternalLineChart(AnalyticsController controller, Color cardBg, Color textMain, Color textMuted, Color borderColor, bool isDark) {
+    final history = controller.userHistoryList;
+    if (history.isEmpty) return _emptyBox(cardBg, borderColor, textMuted, "Grafik Internal: Tren Skor Sehat");
 
     return Container(
-      height: 320,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: borderColor),
-      ),
+      height: 300,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(24), border: Border.all(color: borderColor)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Top 5 Makanan Tinggi Kalori (Big Data)",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textMain),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            "Diambil dari FatSecret Big Data database.",
-            style: TextStyle(fontSize: 12, color: textMuted),
-          ),
-          const SizedBox(height: 24),
+          Text("Tren Skor Gizi Anda (Internal)", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: textMain)),
+          const SizedBox(height: 20),
           Expanded(
-            child: foods.isEmpty
-                ? Center(child: Text("Tidak ada data", style: TextStyle(color: textMain)))
-                : BarChart(
-                    BarChartData(
-                      alignment: BarChartAlignment.spaceAround,
-                      maxY: 600,
-                      barTouchData: BarTouchData(
-                        touchTooltipData: BarTouchTooltipData(
-                          tooltipBgColor: isDark ? const Color(0xff1e293b) : Colors.blue.shade50,
-                          getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                            final foodName = foods[groupIndex]['name'] ?? 'Makanan';
-                            return BarTooltipItem(
-                              "$foodName\n${rod.toY.round()} kcal",
-                              TextStyle(color: textMain, fontWeight: FontWeight.bold, fontSize: 12),
-                            );
-                          },
-                        ),
-                      ),
-                      titlesData: FlTitlesData(
-                        show: true,
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            getTitlesWidget: (double value, TitleMeta meta) {
-                              final int index = value.toInt();
-                              if (index >= 0 && index < foods.length) {
-                                final String rawName = foods[index]['name'] ?? '';
-                                final String shortName = rawName.length > 8
-                                    ? "${rawName.substring(0, 7)}.."
-                                    : rawName;
-                                return SideTitleWidget(
-                                  axisSide: meta.axisSide,
-                                  child: Text(
-                                    shortName,
-                                    style: TextStyle(color: textMuted, fontSize: 10),
-                                  ),
-                                );
-                              }
-                              return const SizedBox();
-                            },
-                            reservedSize: 28,
-                          ),
-                        ),
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            getTitlesWidget: (double value, TitleMeta meta) {
-                              return SideTitleWidget(
-                                axisSide: meta.axisSide,
-                                child: Text(
-                                  "${value.toInt()}",
-                                  style: TextStyle(color: textMuted, fontSize: 9),
-                                ),
-                              );
-                            },
-                            reservedSize: 28,
-                          ),
-                        ),
-                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      ),
-                      gridData: FlGridData(
-                        show: true,
-                        drawVerticalLine: false,
-                        getDrawingHorizontalLine: (value) => FlLine(
-                          color: isDark ? Colors.white10 : Colors.grey.shade100,
-                          strokeWidth: 1,
-                        ),
-                      ),
-                      borderData: FlBorderData(show: false),
-                      barGroups: List.generate(foods.length, (index) {
-                        final val = (foods[index]['calories'] as num).toDouble();
-                        return BarChartGroupData(
-                          x: index,
-                          barRods: [
-                            BarChartRodData(
-                              toY: val,
-                              color: const Color(0xff2563eb),
-                              width: 20,
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(6),
-                                topRight: Radius.circular(6),
-                              ),
-                              backDrawRodData: BackgroundBarChartRodData(
-                                show: true,
-                                toY: 600,
-                                color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade100,
-                              ),
-                            )
-                          ],
-                        );
-                      }),
+            child: LineChart(
+              LineChartData(
+                gridData: const FlGridData(show: false),
+                titlesData: FlTitlesData(
+                  show: true,
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 28,
+                      interval: 20, // Menghindari penumpukan teks sumbu Y (0, 20, 40, dst)
+                      getTitlesWidget: (value, meta) => Text("${value.toInt()}", style: TextStyle(color: textMuted, fontSize: 9)),
                     ),
                   ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        int idx = value.toInt();
+                        if (idx >= 0 && idx < history.length) {
+                          return Text(history[idx].tanggal.split(" ")[0], style: TextStyle(color: textMuted, fontSize: 8));
+                        }
+                        return const SizedBox();
+                      },
+                    ),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                minY: 0,
+                maxY: 100,
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: List.generate(history.length, (i) => FlSpot(i.toDouble(), history[i].skor.toDouble())),
+                    isCurved: true,
+                    color: const Color(0xff10b981),
+                    barWidth: 4,
+                    dotData: const FlDotData(show: true),
+                    belowBarData: BarAreaData(show: true, color: const Color(0xff10b981).withOpacity(0.1)),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  // --- CHART 2: PIE CHART (BIG DATA) ---
-  Widget _buildPieChartSection(AnalyticsController controller, Color cardBg, Color textMain, Color textMuted, Color borderColor, bool isDark) {
+  // =========================================================================
+  // GRAPH 2 (INTERNAL): BAR CHART - RATA-RATA MAKRO NUTRISI USER (SOLUSI FIX MELEBIHI BATAS)
+  // =========================================================================
+  Widget _buildInternalBarChart(AnalyticsController controller, Color cardBg, Color textMain, Color textMuted, Color borderColor, bool isDark) {
+    final avg = controller.userMacroAverage;
+    if (avg.isEmpty) return _emptyBox(cardBg, borderColor, textMuted, "Grafik Internal: Rata-rata Asupan Makro");
+
+    final keys = avg.keys.toList();
+
+    // 🟢 PERBAIKAN TOTAL: Menghitung Max Y secara akurat berdasarkan angka tertinggi dari database
+    double highestGram = 100.0; 
+    for (var val in avg.values) {
+      if (val > highestGram) highestGram = val;
+    }
+    
+    // Memberikan batas atas aman 30% ekstra agar ujung diagram tidak menabrak bingkai atas card
+    double computedMaxY = (highestGram * 1.30); 
+    // Menghitung interval label sumbu Y secara proporsional (jika data besar, loncatan intervalnya per 50g atau 100g)
+    double calculatedInterval = (computedMaxY / 4).roundToDouble();
+    if (calculatedInterval < 10) calculatedInterval = 25.0;
+
+    return Container(
+      height: 320, // Ditambah sedikit tinggi wadah agar teks aman
+      padding: const EdgeInsets.fromLTRB(12, 16, 16, 12),
+      decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(24), border: Border.all(color: borderColor)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Rerata Gram Nutrisi Harian (Internal)", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: textMain)),
+          const SizedBox(height: 24),
+          Expanded(
+            child: BarChart(
+              BarChartData(
+                alignment: BarChartAlignment.spaceAround,
+                maxY: computedMaxY, // Menggunakan kalkulasi batas dinamis
+                borderData: FlBorderData(show: false),
+                titlesData: FlTitlesData(
+                  show: true,
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 36, // Ditambah ruang sumbu kiri agar tidak terpotong
+                      interval: calculatedInterval, // Label sumbu Y berloncat rapi secara matematis
+                      getTitlesWidget: (value, meta) => Text("${value.toInt()}g", style: TextStyle(color: textMuted, fontSize: 9)),
+                    ),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        int idx = value.toInt();
+                        if (idx >= 0 && idx < keys.length) {
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 4.0),
+                            child: Text(keys[idx], style: TextStyle(color: textMuted, fontSize: 9, fontWeight: FontWeight.bold)),
+                          );
+                        }
+                        return const SizedBox();
+                      },
+                    ),
+                  ),
+                ),
+                barGroups: List.generate(keys.length, (i) {
+                  return BarChartGroupData(
+                    x: i,
+                    barRods: [
+                      BarChartRodData(
+                        toY: avg[keys[i]] ?? 0.0,
+                        color: i == 0 ? Colors.blue : (i == 1 ? Colors.amber.shade700 : Colors.red.shade400),
+                        width: 22,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(6),
+                          topRight: Radius.circular(6),
+                        ),
+                      )
+                    ],
+                  );
+                }),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // =========================================================================
+  // GRAPH 3 (EXTERNAL): BAR CHART - TOP KALORI DATASET (SOLUSI FIX MELEBIHI BATAS)
+  // =========================================================================
+  Widget _buildExternalBarChart(AnalyticsController controller, Color cardBg, Color textMain, Color textMuted, Color borderColor, bool isDark) {
+    final foods = controller.topCaloriesFoods;
+    if (foods.isEmpty) return _emptyBox(cardBg, borderColor, textMuted, "Grafik Eksternal: Top Kalori Dataset");
+
+    double maxCal = 500.0;
+    for (var f in foods) {
+      double cal = (f['calories'] as num).toDouble();
+      if (cal > maxCal) maxCal = cal;
+    }
+    
+    double computedMaxY = (maxCal * 1.25); // Bonus 25% area kosong vertikal
+    double calculatedInterval = (computedMaxY / 4).roundToDouble();
+
+    return Container(
+      height: 320,
+      padding: const EdgeInsets.fromLTRB(12, 16, 16, 12),
+      decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(24), border: Border.all(color: borderColor)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Top 5 Makanan Tinggi Kalori (Eksternal Dataset)", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: textMain)),
+          const SizedBox(height: 24),
+          Expanded(
+            child: BarChart(
+              BarChartData(
+                alignment: BarChartAlignment.spaceAround,
+                maxY: computedMaxY,
+                borderData: FlBorderData(show: false),
+                titlesData: FlTitlesData(
+                  show: true,
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 36,
+                      interval: calculatedInterval,
+                      getTitlesWidget: (value, meta) => Text("${value.toInt()}", style: TextStyle(color: textMuted, fontSize: 9)),
+                    ),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        int idx = value.toInt();
+                        if (idx >= 0 && idx < foods.length) {
+                          String name = foods[idx]['name'] ?? '';
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 4.0),
+                            child: Text(name.length > 6 ? "${name.substring(0, 5)}.." : name, style: TextStyle(color: textMuted, fontSize: 9)),
+                          );
+                        }
+                        return const SizedBox();
+                      },
+                    ),
+                  ),
+                ),
+                barGroups: List.generate(foods.length, (i) {
+                  return BarChartGroupData(
+                    x: i,
+                    barRods: [
+                      BarChartRodData(
+                        toY: (foods[i]['calories'] as num).toDouble(),
+                        color: const Color(0xff2563eb),
+                        width: 16,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(5),
+                          topRight: Radius.circular(5),
+                        ),
+                      )
+                    ],
+                  );
+                }),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // =========================================================================
+  // GRAPH 4 (EXTERNAL): PIE CHART - DISTRIBUSI STATUS KESEHATAN DATASET
+  // =========================================================================
+  Widget _buildExternalPieChart(AnalyticsController controller, Color cardBg, Color textMain, Color textMuted, Color borderColor, bool isDark) {
     final summary = controller.bigDataSummary;
     final int healthy = summary['healthy_count'] ?? 0;
     final int lessHealthy = summary['less_healthy_count'] ?? 0;
     final int total = healthy + lessHealthy;
 
-    final double healthyPercent = total > 0 ? (healthy / total) * 100 : 0.0;
-    final double lessHealthyPercent = total > 0 ? (lessHealthy / total) * 100 : 0.0;
+    if (total == 0) return _emptyBox(cardBg, borderColor, textMuted, "Grafik Eksternal: Distribusi Halal Gizi");
 
     return Container(
-      height: 280,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: borderColor),
-      ),
+      height: 300,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(24), border: Border.all(color: borderColor)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Distribusi Kehalalan Gizi (Big Data)",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textMain),
-          ),
-          const SizedBox(height: 18),
+          Text("Distribusi Gizi Sampel Dataset (Eksternal)", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: textMain)),
+          const SizedBox(height: 24),
           Expanded(
-            child: total == 0
-                ? Center(child: Text("Tidak ada data", style: TextStyle(color: textMain)))
-                : Row(
-                    children: [
-                      Expanded(
-                        child: PieChart(
-                          PieChartData(
-                            sectionsSpace: 4,
-                            centerSpaceRadius: 40,
-                            sections: [
-                              PieChartSectionData(
-                                color: const Color(0xff10b981),
-                                value: healthyPercent,
-                                title: "${healthyPercent.toStringAsFixed(1)}%",
-                                radius: 50,
-                                titleStyle: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              PieChartSectionData(
-                                color: const Color(0xfff43f5e),
-                                value: lessHealthyPercent,
-                                title: "${lessHealthyPercent.toStringAsFixed(1)}%",
-                                radius: 50,
-                                titleStyle: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: PieChart(
+                    PieChartData(
+                      sectionsSpace: 3,
+                      centerSpaceRadius: 35,
+                      sections: [
+                        PieChartSectionData(
+                          color: const Color(0xff10b981),
+                          value: (healthy / total) * 100,
+                          title: "${((healthy / total) * 100).toStringAsFixed(0)}%",
+                          radius: 40,
+                          titleStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
                         ),
-                      ),
-                      const SizedBox(width: 14),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildLegendItem(const Color(0xff10b981), "Healthy ($healthy)", textMain),
-                          const SizedBox(height: 8),
-                          _buildLegendItem(const Color(0xfff43f5e), "Less Healthy ($lessHealthy)", textMain),
-                        ],
-                      )
-                    ],
+                        PieChartSectionData(
+                          color: const Color(0xfff43f5e),
+                          value: (lessHealthy / total) * 100,
+                          title: "${((lessHealthy / total) * 100).toStringAsFixed(0)}%",
+                          radius: 40,
+                          titleStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                      ],
+                    ),
                   ),
+                ),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _legendRow(const Color(0xff10b981), "Healthy ($healthy)", textMain),
+                    const SizedBox(height: 8),
+                    _legendRow(const Color(0xfff43f5e), "Less Healthy ($lessHealthy)", textMain),
+                  ],
+                )
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildLegendItem(Color color, String label, Color textMain) {
+  Widget _legendRow(Color c, String text, Color textMain) {
     return Row(
       children: [
-        Container(
-          width: 14,
-          height: 14,
-          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(4)),
-        ),
-        const SizedBox(width: 8),
-        Text(label, style: TextStyle(fontSize: 13, color: textMain, fontWeight: FontWeight.w500)),
+        Container(width: 10, height: 10, decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(3))),
+        const SizedBox(width: 6),
+        Text(text, style: TextStyle(fontSize: 11, color: textMain, fontWeight: FontWeight.w500)),
       ],
     );
   }
 
-  // --- CHART 3: LINE CHART (USER DATA) ---
-  Widget _buildLineChartSection(AnalyticsController controller, Color cardBg, Color textMain, Color textMuted, Color borderColor, bool isDark) {
-    final history = controller.userHistoryList;
-
+  Widget _emptyBox(Color cardBg, Color borderColor, Color textMuted, String title) {
     return Container(
-      height: 320,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: borderColor),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Progress Kesehatan Harian Anda (User)",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textMain),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            "Menampilkan riwayat skor kesehatan (0 - 100) gizi Anda.",
-            style: TextStyle(fontSize: 12, color: textMuted),
-          ),
-          const SizedBox(height: 24),
-          Expanded(
-            child: history.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.history_toggle_off_rounded, color: textMuted, size: 40),
-                        const SizedBox(height: 8),
-                        Text("Belum ada riwayat konsumsi Anda", style: TextStyle(color: textMuted, fontSize: 13)),
-                      ],
-                    ),
-                  )
-                : LineChart(
-                    LineChartData(
-                      gridData: FlGridData(
-                        show: true,
-                        getDrawingHorizontalLine: (value) => FlLine(
-                          color: isDark ? Colors.white10 : Colors.grey.shade100,
-                          strokeWidth: 1,
-                        ),
-                        drawVerticalLine: false,
-                      ),
-                      titlesData: FlTitlesData(
-                        show: true,
-                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            getTitlesWidget: (double value, TitleMeta meta) {
-                              return SideTitleWidget(
-                                axisSide: meta.axisSide,
-                                child: Text(
-                                  "${value.toInt()}",
-                                  style: TextStyle(color: textMuted, fontSize: 9),
-                                ),
-                              );
-                            },
-                            reservedSize: 24,
-                          ),
-                        ),
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            getTitlesWidget: (double value, TitleMeta meta) {
-                              final int index = value.toInt();
-                              if (index >= 0 && index < history.length) {
-                                final String dateStr = history[index].tanggal;
-                                // Display only date part e.g. "25 Jun" or just day number
-                                final parts = dateStr.split(" ");
-                                final String shortDate = parts.length >= 2
-                                    ? "${parts[0]} ${parts[1].substring(0, min(3, parts[1].length))}"
-                                    : dateStr;
-                                return SideTitleWidget(
-                                  axisSide: meta.axisSide,
-                                  child: Text(
-                                    shortDate,
-                                    style: TextStyle(color: textMuted, fontSize: 9),
-                                  ),
-                                );
-                              }
-                              return const SizedBox();
-                            },
-                            reservedSize: 24,
-                          ),
-                        ),
-                      ),
-                      borderData: FlBorderData(show: false),
-                      minY: 0,
-                      maxY: 100,
-                      lineTouchData: LineTouchData(
-                        touchTooltipData: LineTouchTooltipData(
-                          tooltipBgColor: isDark ? const Color(0xff1e293b) : Colors.blue.shade50,
-                          getTooltipItems: (touchedSpots) {
-                            return touchedSpots.map((spot) {
-                              final data = history[spot.x.toInt()];
-                              return LineTooltipItem(
-                                "Skor: ${spot.y.round()}\nStatus: ${data.statusKondisi}",
-                                TextStyle(color: textMain, fontWeight: FontWeight.bold, fontSize: 12),
-                              );
-                            }).toList();
-                          },
-                        ),
-                      ),
-                      lineBarsData: [
-                        LineChartBarData(
-                          spots: List.generate(history.length, (index) {
-                            final double score = history[index].skor.toDouble();
-                            return FlSpot(index.toDouble(), score);
-                          }),
-                          isCurved: true,
-                          color: const Color(0xff10b981),
-                          barWidth: 4,
-                          isStrokeCapRound: true,
-                          dotData: const FlDotData(show: true),
-                          belowBarData: BarAreaData(
-                            show: true,
-                            color: const Color(0xff10b981).withOpacity(0.15),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-          ),
-        ],
+      height: 200,
+      width: double.infinity,
+      decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(24), border: Border.all(color: borderColor)),
+      child: Center(
+        child: Text("$title\n(Data kosong/Menunggu input gizi)", textAlign: TextAlign.center, style: TextStyle(color: textMuted, fontSize: 12)),
       ),
     );
   }
 
-  int min(int a, int b) => a < b ? a : b;
+  // --- EXPLORASI LIST DATASET ---
+  Widget _buildFoodsListSection(AnalyticsController controller, Color cardBg, Color textMain, Color textMuted, Color borderColor, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(24), border: Border.all(color: borderColor)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.dataset_rounded, color: Color(0xff7c3aed), size: 22),
+              const SizedBox(width: 8),
+              Text("Eksplorasi FatSecret Big Data", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: textMain)),
+            ],
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            style: TextStyle(color: textMain, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: "Cari makanan sampel dataset...",
+              hintStyle: TextStyle(color: textMuted, fontSize: 12),
+              prefixIcon: Icon(Icons.search, color: textMuted, size: 18),
+              filled: true,
+              fillColor: isDark ? const Color(0xff182235) : Colors.grey.shade50,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+            ),
+            onSubmitted: (val) => controller.fetchBigDataFoods(val.trim()),
+          ),
+          const SizedBox(height: 16),
+          Obx(() {
+            if (controller.isFoodsLoading.value) return const Center(child: CircularProgressIndicator());
+            final foods = controller.bigDataFoods;
+            if (foods.isEmpty) return Center(child: Text("Tidak ada data", style: TextStyle(color: textMuted)));
+
+            return ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: min(5, foods.length),
+              separatorBuilder: (c, i) => Divider(color: borderColor),
+              itemBuilder: (context, index) {
+                final food = foods[index];
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(food['name'] ?? '', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textMain)),
+                  subtitle: Text("🔥 ${food['calories']} kcal | 💪 P: ${food['protein']}g | 🥑 L: ${food['fat']}g", style: TextStyle(fontSize: 11, color: textMuted)),
+                  trailing: Text(food['health_status'] ?? '', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: food['health_status'] == 'Healthy' ? Colors.green : Colors.red)),
+                );
+              },
+            );
+          }),
+        ],
+      ),
+    );
+  }
 }

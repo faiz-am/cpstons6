@@ -64,6 +64,7 @@ class InputView extends GetView<InputController> {
               children: [
                 Expanded(
                   child: Obx(() => DropdownButtonFormField<String>(
+                    isExpanded: true,
                     value: controller.aktivitas.value,
                     decoration: _inputDecoration("Aktivitas", Icons.directions_run),
                     items: controller.aktivitasList.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
@@ -89,6 +90,7 @@ class InputView extends GetView<InputController> {
             ),
             const SizedBox(height: 20),
             Obx(() => DropdownButtonFormField<String>(
+              isExpanded: true,
               value: controller.penyakit.value,
               decoration: _inputDecoration("Pilih Penyakit", Icons.health_and_safety),
               items: controller.penyakitList.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
@@ -159,6 +161,7 @@ class InputView extends GetView<InputController> {
           final listFoods = controller.daftarMakanan;
           if (listFoods.isEmpty) {
             return DropdownButtonFormField<String>(
+              isExpanded: true,
               decoration: _inputDecoration(label, icon),
               items: const [],
               onChanged: null,
@@ -175,6 +178,7 @@ class InputView extends GetView<InputController> {
           }
 
           return DropdownButtonFormField<String>(
+            isExpanded: true,
             value: selectedValue,
             decoration: _inputDecoration(label, icon),
             items: listFoods.map((food) {
@@ -206,6 +210,7 @@ class InputView extends GetView<InputController> {
             Expanded(
               flex: 3,
               child: Obx(() => DropdownButtonFormField<String>(
+                isExpanded: true,
                 value: satuanObs.value,
                 decoration: _inputDecoration("Satuan", Icons.unfold_more),
                 items: const [

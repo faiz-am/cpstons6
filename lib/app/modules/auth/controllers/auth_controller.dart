@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:get/get.dart';
@@ -9,22 +8,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../../routes/app_pages.dart';
+import '../../../data/services/api_service.dart'; // Import ApiService kamu
 
-// =====================================================================
-// PENTING: Ganti nilai di bawah dengan Web Client ID dari Firebase
-// Console Anda:
-// Firebase Console → Project Settings → General → Web API Key
-// atau Google Cloud Console → APIs & Credentials → OAuth 2.0 Client IDs
-// Pilih tipe "Web application" dan salin Client ID-nya
-// =====================================================================
-const String _webClientId =
-    '875638165481-hpnqk2mjsj1mguen4tl4blpfudk2tqfu.apps.googleusercontent.com';
+const String _webClientId = '875638165481-hpnqk2mjsj1mguen4tl4blpfudk2tqfu.apps.googleusercontent.com';
 
 class AuthController extends GetxController {
-
   final storage = const FlutterSecureStorage();
 
-  final String baseUrl = "http://127.0.0.1:5000";
+  // MEMPERBAIKAI: Panggil instansi ApiService global
+  final ApiService _api = Get.find<ApiService>();
 
   RxBool isLoading = false.obs;
   RxBool isLoggedIn = false.obs;
@@ -39,9 +31,7 @@ class AuthController extends GetxController {
   }
 
   Future<void> checkLogin() async {
-
     token = await storage.read(key: "token");
-
     isLoggedIn.value = token != null;
     if (isLoggedIn.value) {
       userEmail.value = await storage.read(key: "username") ?? "";
@@ -52,16 +42,13 @@ class AuthController extends GetxController {
   // LOGIN
   // =========================
   Future<void> login(String username, String password) async {
-
     try {
-
       isLoading.value = true;
 
+      // MEMPERBAIKAI: Ambil nilai baseUrl otomatis dari ApiService
       final response = await http.post(
-        Uri.parse("$baseUrl/api/login"),
-        headers: {
-          "Content-Type": "application/json",
-        },
+        Uri.parse("${_api.baseUrl}/api/login"),
+        headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "username": username,
           "password": password,
@@ -69,31 +56,17 @@ class AuthController extends GetxController {
       );
 
       final data = jsonDecode(response.body);
-
       if (data['success']) {
-
         token = data['token'];
-
-        await storage.write(
-          key: "token",
-          value: token,
-        );
-
-        await storage.write(
-          key: "username",
-          value: username,
-        );
+        await storage.write(key: "token", value: token);
+        await storage.write(key: "username", value: username);
 
         userEmail.value = username;
         isLoggedIn.value = true;
-
         Get.offAllNamed(Routes.MAIN_NAV);
-
       } else {
-
         Get.snackbar("Error", data['message']);
       }
-
     } finally {
       isLoading.value = false;
     }
@@ -103,16 +76,13 @@ class AuthController extends GetxController {
   // REGISTER
   // =========================
   Future<bool> register(String username, String password) async {
-
     try {
-
       isLoading.value = true;
 
+      // MEMPERBAIKAI: Ambil nilai baseUrl otomatis dari ApiService
       final response = await http.post(
-        Uri.parse("$baseUrl/api/register"),
-        headers: {
-          "Content-Type": "application/json",
-        },
+        Uri.parse("${_api.baseUrl}/api/register"),
+        headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "username": username,
           "password": password,
@@ -120,9 +90,7 @@ class AuthController extends GetxController {
       );
 
       final data = jsonDecode(response.body);
-
       if (data['success']) {
-        // Navigasi ke halaman verifikasi OTP, bawa email sebagai argument
         Get.toNamed(Routes.VERIFY_OTP, arguments: username);
         return true;
       } else {
@@ -134,14 +102,10 @@ class AuthController extends GetxController {
         );
         return false;
       }
-
     } catch (e) {
-
       Get.snackbar("Error", e.toString());
       return false;
-
     } finally {
-
       isLoading.value = false;
     }
   }
@@ -153,11 +117,10 @@ class AuthController extends GetxController {
     try {
       isLoading.value = true;
 
+      // MEMPERBAIKAI: Ambil nilai baseUrl otomatis dari ApiService
       final response = await http.post(
-        Uri.parse("$baseUrl/api/verify-otp"),
-        headers: {
-          "Content-Type": "application/json",
-        },
+        Uri.parse("${_api.baseUrl}/api/verify-otp"),
+        headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "username": username,
           "otp": otp,
@@ -165,7 +128,6 @@ class AuthController extends GetxController {
       );
 
       final data = jsonDecode(response.body);
-
       if (data['success']) {
         Get.snackbar(
           "Berhasil! ✅",
@@ -174,7 +136,6 @@ class AuthController extends GetxController {
           colorText: Colors.white,
           duration: const Duration(seconds: 3),
         );
-        // Arahkan ke halaman login setelah verifikasi berhasil
         Get.offAllNamed(Routes.LOGIN);
       } else {
         Get.snackbar(
@@ -198,8 +159,6 @@ class AuthController extends GetxController {
     try {
       isLoading.value = true;
 
-      // 1. Jalankan Google Sign-In flow
-      // Untuk Flutter Web, clientId WAJIB diisi
       final GoogleSignIn googleSignIn = GoogleSignIn(
         clientId: kIsWeb ? _webClientId : null,
         scopes: ['email', 'profile'],
@@ -207,21 +166,16 @@ class AuthController extends GetxController {
 
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
-        // User cancel login
         isLoading.value = false;
         return;
       }
 
-      // 2. Dapatkan autentikasi details dari request
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-
-      // 3. Buat credential baru untuk Firebase
       final OAuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      // 4. Masuk ke Firebase dengan credential
       final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
       final User? firebaseUser = userCredential.user;
 
@@ -231,7 +185,6 @@ class AuthController extends GetxController {
         return;
       }
 
-      // Dapatkan ID Token untuk dikirim ke backend
       final String? idToken = await firebaseUser.getIdToken();
       if (idToken == null) {
         Get.snackbar("Error", "Gagal mendapatkan token autentikasi.");
@@ -239,32 +192,22 @@ class AuthController extends GetxController {
         return;
       }
 
-      // 5. Sinkronisasi dengan backend kita dengan ID Token
+      // MEMPERBAIKAI: Ambil nilai baseUrl otomatis dari ApiService
       final response = await http.post(
-        Uri.parse("$baseUrl/api/firebase-login"),
-        headers: {
-          "Content-Type": "application/json",
-        },
+        Uri.parse("${_api.baseUrl}/api/firebase-login"),
+        headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "id_token": idToken,
         }),
       );
 
       final data = jsonDecode(response.body);
-
       if (data['success']) {
         token = data['token'];
-
-        await storage.write(
-          key: "token",
-          value: token,
-        );
+        await storage.write(key: "token", value: token);
 
         if (firebaseUser.email != null) {
-          await storage.write(
-            key: "username",
-            value: firebaseUser.email,
-          );
+          await storage.write(key: "username", value: firebaseUser.email);
           userEmail.value = firebaseUser.email!;
         }
 
@@ -273,7 +216,6 @@ class AuthController extends GetxController {
       } else {
         Get.snackbar("Error", data['message'] ?? "Sinkronisasi backend gagal.");
       }
-
     } catch (e) {
       Get.snackbar("Error", "Google login gagal: $e");
     } finally {
@@ -285,7 +227,6 @@ class AuthController extends GetxController {
   // LOGOUT
   // =========================
   Future<void> logout() async {
-
     await storage.delete(key: "token");
     await storage.delete(key: "username");
 

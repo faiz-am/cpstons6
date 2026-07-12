@@ -86,10 +86,14 @@ class RiwayatView extends GetView<RiwayatController> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Header Kartu: Tanggal & Badge Status Kondisi
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        runSpacing: 8,
+                        spacing: 8,
                         children: [
                           Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(Icons.calendar_today_rounded, size: 16, color: Colors.grey.shade600),
                               const SizedBox(width: 8),
@@ -104,6 +108,7 @@ class RiwayatView extends GetView<RiwayatController> {
                             ],
                           ),
                           Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -116,7 +121,7 @@ class RiwayatView extends GetView<RiwayatController> {
                                   style: const TextStyle(
                                     color: Color(0xff2563eb),
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 11,
+                                    fontSize: 10,
                                   ),
                                 ),
                               ),
@@ -132,13 +137,13 @@ class RiwayatView extends GetView<RiwayatController> {
                                   style: TextStyle(
                                     color: warnaStatus,
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 11,
+                                    fontSize: 10,
                                     letterSpacing: 0.5,
                                   ),
                                 ),
                               ),
                             ],
-                          )
+                          ),
                         ],
                       ),
                       const Divider(height: 24, thickness: 1),
@@ -204,7 +209,7 @@ class RiwayatView extends GetView<RiwayatController> {
                                   Icon(Icons.auto_awesome_rounded, color: Colors.green.shade700, size: 18),
                                   const SizedBox(width: 8),
                                   Text(
-                                    "Analisis & Saran Gizi AI",
+                                    "Analisis & Saran Gizi",
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 13,

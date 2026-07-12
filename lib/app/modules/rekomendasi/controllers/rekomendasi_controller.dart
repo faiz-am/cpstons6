@@ -1,13 +1,15 @@
-import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
+import 'package:http/http.dart' as http; // Tetap di-import jika dibutuhkan fallback, tapi request utama lewat ApiService
 import '../../auth/controllers/auth_controller.dart';
 import '../../home/controllers/home_controller.dart';
 import '../../riwayat/controllers/riwayat_controller.dart';
+import '../../../data/services/api_service.dart'; // Import ApiService terpusat kamu
 
 class RekomendasiController extends GetxController {
-  final String baseUrl = "http://127.0.0.1:5000"; // Sesuaikan IP-mu
+  // MEMPERBAIKAI: Panggil instansi ApiService global (IP diatur dari satu tempat)
+  final ApiService _api = Get.find<ApiService>();
 
   var isLoading = true.obs;
   var isSaved = false.obs;
@@ -48,14 +50,11 @@ class RekomendasiController extends GetxController {
       Map<String, dynamic> argumentsData = Get.arguments ?? {};
       dataInputan.value = argumentsData;
 
-      final respon = await http.post(
-        Uri.parse("$baseUrl/api/proses-rekomendasi"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode(argumentsData),
-      );
+      // MEMPERBAIKAI: Menggunakan ApiService terpusat untuk rute rekomendasi medis riil
+      final respon = await _api.post('/api/proses-rekomendasi', argumentsData);
 
-      if (respon.statusCode == 200) {
-        var hasil = jsonDecode(respon.body)['data'];
+      if (respon.statusCode == 200 && respon.body != null) {
+        var hasil = respon.body['data'];
         
         // FUNGSI HELPER SUPER AMAN: Kebal dari "Invalid double" & spasi liar
         double ambilAngka(dynamic nilai) {
@@ -86,7 +85,7 @@ class RekomendasiController extends GetxController {
         persenSodium.value  = totalSodium.value / 2000.0;
 
       } else {
-        var msg = jsonDecode(respon.body)['message'] ?? "Gagal memproses rekomendasi.";
+        var msg = respon.body != null ? respon.body['message'] : "Gagal memproses rekomendasi.";
         saranText.value = "Error Server: $msg";
       }
     } catch (e) {
@@ -122,13 +121,10 @@ class RekomendasiController extends GetxController {
         "skor": healthScore.value,
       };
 
-      final respon = await http.post(
-        Uri.parse("$baseUrl/api/simpan-riwayat"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode(bodySimpan),
-      );
+      // MEMPERBAIKAI: Menggunakan ApiService terpusat untuk rute simpan riwayat
+      final respon = await _api.post('/api/simpan-riwayat', bodySimpan);
 
-      if (respon.statusCode == 200) {
+      if (respon.statusCode == 200 && respon.body != null) {
         isSaved.value = true;
 
         // Sinkronisasi data di Home & Riwayat jika controller terdaftar
@@ -139,7 +135,7 @@ class RekomendasiController extends GetxController {
           await Get.find<RiwayatController>().ambilDataRiwayat();
         }
 
-        var msg = jsonDecode(respon.body)['message'];
+        var msg = respon.body['message'] ?? "Data berhasil disimpan!";
         Get.snackbar(
           "Sukses", 
           msg,
@@ -153,7 +149,7 @@ class RekomendasiController extends GetxController {
           Get.offAllNamed('/main-nav');
         });
       } else {
-        var msg = jsonDecode(respon.body)['message'] ?? "Gagal menyimpan.";
+        var msg = respon.body != null ? respon.body['message'] : "Gagal menyimpan.";
         Get.snackbar("Gagal", msg, backgroundColor: Colors.red, colorText: Colors.white);
       }
     } catch (e) {

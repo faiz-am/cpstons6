@@ -118,18 +118,17 @@ class LoginView extends StatelessWidget {
 
       backgroundColor: const Color(0xfff5f9ff),
 
-      body: Center(
-
-        child: Container(
-
-          constraints: const BoxConstraints(maxWidth: 420),
-
-          padding: const EdgeInsets.all(24),
-
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-          ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Center(
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 420),
+              margin: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+              ),
 
           child: Column(
 
@@ -254,6 +253,8 @@ class LoginView extends StatelessWidget {
             ],
           ),
         ),
+      ),
+      ),
       ),
     );
   }

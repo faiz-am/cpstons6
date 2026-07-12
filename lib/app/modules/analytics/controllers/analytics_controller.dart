@@ -1,19 +1,21 @@
 import 'package:get/get.dart';
 import '../../../data/models/riwayat_model.dart';
 import '../../auth/controllers/auth_controller.dart';
+import '../../../data/services/api_service.dart';
 
 class AnalyticsController extends GetxController {
   final isLoading = false.obs;
-  final String baseUrl = "http://127.0.0.1:5000/api";
-  final GetConnect _connect = GetConnect();
+  final isFoodsLoading = false.obs;
+  final ApiService _api = Get.find<ApiService>();
 
-  // Big Data state
+  // State Data Eksternal (Big Data FatSecret Dataset)
   final bigDataSummary = <String, dynamic>{}.obs;
   final topCaloriesFoods = <Map<String, dynamic>>[].obs;
-  final topProteinFoods = <Map<String, dynamic>>[].obs;
+  final bigDataFoods = <Map<String, dynamic>>[].obs;
 
-  // User History state
+  // State Data Internal (User Records MySQL)
   final userHistoryList = <RiwayatModel>[].obs;
+  final userMacroAverage = <String, double>{}.obs;
 
   @override
   void onInit() {
@@ -26,32 +28,62 @@ class AnalyticsController extends GetxController {
       isLoading.value = true;
       final email = Get.find<AuthController>().userEmail.value;
 
-      // 1. Fetch Big Data Analytics
-      final bigDataResponse = await _connect.get('$baseUrl/bigdata/analytics');
-      if (bigDataResponse.status.hasError) {
-        print("Error fetching Big Data Analytics from backend");
-      } else if (bigDataResponse.body != null && bigDataResponse.body['success'] == true) {
+      // 1. Ambil Analitik Data Eksternal
+      final bigDataResponse = await _api.get('/api/bigdata/analytics');
+      if (bigDataResponse.statusCode == 200 && bigDataResponse.body != null && bigDataResponse.body['success'] == true) {
         bigDataSummary.value = bigDataResponse.body['summary'] ?? {};
-        
         final List rawCal = bigDataResponse.body['top_calories'] ?? [];
         topCaloriesFoods.value = rawCal.map((e) => Map<String, dynamic>.from(e)).toList();
-
-        final List rawProt = bigDataResponse.body['top_protein'] ?? [];
-        topProteinFoods.value = rawProt.map((e) => Map<String, dynamic>.from(e)).toList();
       }
 
-      // 2. Fetch User History Data
-      final historyResponse = await _connect.get('$baseUrl/ambil-riwayat?username=$email');
-      if (historyResponse.status.hasError) {
-        print("Error fetching User History from backend");
-      } else if (historyResponse.body != null && historyResponse.body['success'] == true) {
+      await fetchBigDataFoods("");
+
+      // 2. Ambil Analitik Data Internal User
+      final historyResponse = await _api.get('/api/ambil-riwayat?username=$email');
+      if (historyResponse.statusCode == 200 && historyResponse.body != null && historyResponse.body['success'] == true) {
         final List dataAsli = historyResponse.body['data'] ?? [];
+        
+        // Mapping riwayat
         userHistoryList.value = dataAsli.map((e) => RiwayatModel.fromJson(e)).toList();
+
+        // Hitung rata-rata makro internal untuk Grafik Batang Internal
+        if (userHistoryList.isNotEmpty) {
+          double totalProtein = 0;
+          double totalKarbo = 0;
+          double totalLemak = 0;
+
+          for (var item in userHistoryList) {
+            totalProtein += item.protein;
+            totalKarbo += item.karbohidrat;
+            totalLemak += item.lemak;
+          }
+
+          userMacroAverage.value = {
+            'Protein': totalProtein / userHistoryList.length,
+            'Karbohidrat': totalKarbo / userHistoryList.length,
+            'Lemak': totalLemak / userHistoryList.length,
+          };
+        }
       }
     } catch (e) {
       print("Error in AnalyticsController: $e");
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> fetchBigDataFoods(String search) async {
+    try {
+      isFoodsLoading.value = true;
+      final response = await _api.get('/api/bigdata/foods?search=$search');
+      if (response.statusCode == 200 && response.body != null && response.body['success'] == true) {
+        final List rawFoods = response.body['foods'] ?? [];
+        bigDataFoods.value = rawFoods.map((e) => Map<String, dynamic>.from(e)).toList();
+      }
+    } catch (e) {
+      print("Error in fetchBigDataFoods: $e");
+    } finally {
+      isFoodsLoading.value = false;
     }
   }
 }

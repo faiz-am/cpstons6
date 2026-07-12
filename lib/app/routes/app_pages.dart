@@ -1,9 +1,15 @@
 import 'package:get/get.dart';
 
+import '../modules/analytics/controllers/analytics_controller.dart';
+import '../modules/auth/views/verify_otp_view.dart';
+import '../modules/chatbot/bindings/chatbot_binding.dart';
+import '../modules/chatbot/views/chatbot_view.dart';
+import '../modules/home/controllers/home_controller.dart';
 import '../modules/home/views/home_view.dart';
 import '../modules/input/controllers/input_controller.dart';
 import '../modules/input/views/input_view.dart';
 import '../modules/insight/bindings/insight_binding.dart';
+import '../modules/insight/controllers/insight_controller.dart';
 import '../modules/insight/views/insight_view.dart';
 import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
@@ -13,14 +19,10 @@ import '../modules/register/bindings/register_binding.dart';
 import '../modules/register/views/register_view.dart';
 import '../modules/rekomendasi/controllers/rekomendasi_controller.dart';
 import '../modules/rekomendasi/views/rekomendasi_view.dart';
-import '../modules/riwayat/views/riwayat_view.dart';
 import '../modules/riwayat/bindings/riwayat_binding.dart';
-import '../modules/settings/views/settings_view.dart';
+import '../modules/riwayat/views/riwayat_view.dart';
 import '../modules/settings/controllers/settings_controller.dart';
-import '../modules/insight/controllers/insight_controller.dart';
-import '../modules/home/controllers/home_controller.dart';
-import '../modules/analytics/controllers/analytics_controller.dart';
-import '../modules/auth/views/verify_otp_view.dart';
+import '../modules/settings/views/settings_view.dart';
 
 part 'app_routes.dart';
 
@@ -34,7 +36,6 @@ class AppPages {
     GetPage(
       name: _Paths.MAIN_NAV,
       page: () => const MainNavView(),
-
       binding: BindingsBuilder(() {
         Get.put(MainNavController());
         Get.put(HomeController());
@@ -68,7 +69,7 @@ class AppPages {
       page: () => const RiwayatView(),
       binding: RiwayatBinding(),
     ),
-    
+
     GetPage(
       name: _Paths.LOGIN,
       page: () => const LoginView(),
@@ -87,6 +88,11 @@ class AppPages {
     GetPage(
       name: _Paths.VERIFY_OTP,
       page: () => VerifyOtpView(),
+    ),
+    GetPage(
+      name: _Paths.CHATBOT,
+      page: () => const ChatbotView(),
+      binding: ChatbotBinding(),
     ),
   ];
 }

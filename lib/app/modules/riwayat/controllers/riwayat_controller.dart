@@ -1,14 +1,14 @@
 import 'package:get/get.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../../data/models/riwayat_model.dart';
+import '../../../data/services/api_service.dart'; // Import ApiService terpusat kamu
 
 class RiwayatController extends GetxController {
   final riwayatList = <RiwayatModel>[].obs;
   final isLoading = false.obs;
   
-  // Masukkan url backend sesuai dengan konfigurasi Flask kamu
-  final String baseUrl = "http://127.0.0.1:5000/api"; 
-  final GetConnect _connect = GetConnect();
+  // MEMPERBAIKAI: Panggil instansi ApiService global (IP diatur dari satu tempat)
+  final ApiService _api = Get.find<ApiService>();
 
   @override
   void onInit() {
@@ -20,7 +20,10 @@ class RiwayatController extends GetxController {
     try {
       isLoading.value = true;
       final email = Get.find<AuthController>().userEmail.value;
-      final response = await _connect.get('$baseUrl/ambil-riwayat?username=$email');
+      
+      // MEMPERBAIKAI: Menggunakan endpoint relatif terpusat via ApiService
+      // 🟢 UBAH MENJADI:
+      final response = await _api.get('/api/ambil-riwayat?username=$email');
 
       if (response.status.hasError) {
         Get.snackbar("Eror Koneksi", "Gagal memuat riwayat dari server backend");

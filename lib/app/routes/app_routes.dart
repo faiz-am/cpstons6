@@ -12,6 +12,7 @@ abstract class Routes {
   static const REGISTER = _Paths.REGISTER;
   static const INSIGHT = _Paths.INSIGHT;
   static const VERIFY_OTP = _Paths.VERIFY_OTP;
+  static const CHATBOT = _Paths.CHATBOT;
 }
 
 abstract class _Paths {
@@ -26,4 +27,5 @@ abstract class _Paths {
   static const REGISTER = '/register';
   static const INSIGHT = '/insight';
   static const VERIFY_OTP = '/verify-otp';
+  static const CHATBOT = '/chatbot';
 }

@@ -3,14 +3,15 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
+import 'package:http/http.dart' as http; // Tetap di-import untuk kebutuhan MultipartRequest
 import 'package:image_picker/image_picker.dart';
 
 import '../../../routes/app_pages.dart';
+import '../../../data/services/api_service.dart'; // Import ApiService terpusat kamu
 
 class InputController extends GetxController {
-  // Base URL Flask (Gunakan 10.0.2.2 untuk emulator Android)
-  final String baseUrl = "http://127.0.0.1:5000";
+  // MEMPERBAIKAI: Panggil instansi ApiService global (IP diatur dari satu tempat)
+  final ApiService _api = Get.find<ApiService>();
 
   // Makanan & Porsi Controller
   final pagiC = TextEditingController();
@@ -21,7 +22,7 @@ class InputController extends GetxController {
   final siangPorsiC = TextEditingController();
   final malamPorsiC = TextEditingController();
 
-  // RxString untuk Satuan (Defaut: gram)
+  // RxString untuk Satuan (Default: gram)
   var pagiSatuan = "gram".obs;
   var siangSatuan = "gram".obs;
   var malamSatuan = "gram".obs;
@@ -42,12 +43,11 @@ class InputController extends GetxController {
 
   Future<void> ambilDaftarMakanan() async {
     try {
-      final res = await http.get(
-        Uri.parse("$baseUrl/api/makanan"),
-      ).timeout(const Duration(seconds: 4));
+      // MEMPERBAIKAI: Menggunakan ApiService terpusat dengan timeout bawaan
+      final res = await _api.get('/api/makanan');
 
-      if (res.statusCode == 200) {
-        List<dynamic> data = jsonDecode(res.body);
+      if (res.statusCode == 200 && res.body != null) {
+        List<dynamic> data = res.body;
         daftarMakanan.value = data.map((e) => e.toString()).toList();
       }
     } catch (e) {
@@ -141,14 +141,12 @@ class InputController extends GetxController {
     try {
       final picked = await picker.pickImage(source: source, imageQuality: 70);
       if (picked != null) {
-        // Tampilkan loading dialog
         Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
 
-        // Baca bytes secara asynchronous (kompatibel web & mobile)
         final bytes = await picked.readAsBytes();
 
-        // Upload ke endpoint deteksi makanan di backend
-        var request = http.MultipartRequest('POST', Uri.parse("$baseUrl/api/predict-makanan"));
+        // MEMPERBAIKAI: Endpoint ditarik dari string ApiService global agar sinkron otomatis
+        var request = http.MultipartRequest('POST', Uri.parse("${_api.baseUrl}/api/predict-makanan"));
         request.files.add(http.MultipartFile.fromBytes('image', bytes, filename: picked.name));
         var streamedResponse = await request.send().timeout(const Duration(seconds: 10));
         var response = await http.Response.fromStream(streamedResponse);
@@ -161,7 +159,6 @@ class InputController extends GetxController {
             String predicted = resData['predicted_food'];
             double confidence = resData['confidence'] != null ? (resData['confidence'] as num).toDouble() : 0.0;
 
-            // Set makanan terpilih otomatis
             if (type == "pagi") {
               pagiMakanan.value = predicted;
               pagiC.text = predicted;
@@ -187,7 +184,6 @@ class InputController extends GetxController {
           Get.snackbar("Eror Server", "Gagal memproses gambar pada server", backgroundColor: Colors.red, colorText: Colors.white);
         }
 
-        // Konversi ke base64 untuk disimpan ke riwayat
         final base64String = base64Encode(bytes);
 
         if (type == "pagi") {
@@ -202,7 +198,7 @@ class InputController extends GetxController {
         }
       }
     } catch (e) {
-      Get.back(); // Pastikan loading tertutup jika crash
+      Get.back(); 
       print("Eror proses gambar: $e");
       Get.snackbar("Eror Proses", e.toString(), backgroundColor: Colors.red, colorText: Colors.white);
     }
@@ -215,21 +211,17 @@ class InputController extends GetxController {
     if (query.trim().isEmpty) return [];
     
     try {
-      // Pastikan endpoint di bawah ini sesuai dengan prefix blueprint Flask kamu (misal: /api/makanan)
-      final res = await http.get(
-        Uri.parse("$baseUrl/api/makanan?search=${Uri.encodeComponent(query)}"),
-      ).timeout(const Duration(seconds: 2));
+      // MEMPERBAIKAI: Menggunakan ApiService untuk sinkronisasi pencarian makanan
+      final res = await _api.get('/api/makanan?search=${Uri.encodeComponent(query)}');
 
-      if (res.statusCode == 200) {
-        List<dynamic> data = jsonDecode(res.body);
+      if (res.statusCode == 200 && res.body != null) {
+        List<dynamic> data = res.body;
         return data.map((e) => e.toString()).toList();
       }
     } catch (e) {
       print("Koneksi Flask error / Data tidak ditemukan: $e");
     }
 
-    // KOSONGKAN LIST LOKAL: Hapus data dummy agar jika database kosong, 
-    // sistem tidak memunculkan data palsu yang membingungkan.
     return []; 
   }
 
@@ -249,46 +241,38 @@ class InputController extends GetxController {
     Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
 
     try {
-      // 1. Ambil Kalkulasi Gizi dari Backend untuk Makanan Pagi, Siang, Malam
       var giziPagi = await _tembakApiGizi(pagiC.text, pagiPorsiC.text, pagiSatuan.value);
       var giziSiang = await _tembakApiGizi(siangC.text, siangPorsiC.text, siangSatuan.value);
       var giziMalam = await _tembakApiGizi(malamC.text, malamPorsiC.text, malamSatuan.value);
 
       Get.back(); // Tutup loading dialog
 
-      // 2. Satukan paket data untuk dikirim ke halaman Rekomendasi
-      // === PASTIKAN STRUKTUR DI INPUT_CONTROLLER SEPERTI INI ===
-    final Map<String, dynamic> rekapData = {
-      // 1. Mengirimkan paket data gizi hasil hitungan Flask
-      "gizi_pagi": giziPagi,   
-      "gizi_siang": giziSiang, 
-      "gizi_malam": giziMalam, 
-      
-      // 2. Mengirim parameter kondisi kesehatan fisik
-      "aktivitas": aktivitas.value,
-      "penyakit": penyakit.value,
-      "gula_darah": gulaDarahC.text,
-      "sistolik": sistolikC.text,
-      "diastolik": diastolikC.text,
-      "tinggi": tinggiC.text,
-      "berat": beratC.text,
+      final Map<String, dynamic> rekapData = {
+        "gizi_pagi": giziPagi,   
+        "gizi_siang": giziSiang, 
+        "gizi_malam": giziMalam, 
+        
+        "aktivitas": aktivitas.value,
+        "penyakit": penyakit.value,
+        "gula_darah": gulaDarahC.text,
+        "sistolik": sistolikC.text,
+        "diastolik": diastolikC.text,
+        "tinggi": tinggiC.text,
+        "berat": beratC.text,
 
-      // 3. Mengirim String teks nama makanan untuk widget kotak di bawah
-      "pagi": "${pagiC.text} (${pagiPorsiC.text} ${pagiSatuan.value})",      
-      "siang": "${siangC.text} (${siangPorsiC.text} ${siangSatuan.value})",
-      "malam": "${malamC.text} (${malamPorsiC.text} ${malamSatuan.value})",
+        "pagi": "${pagiC.text} (${pagiPorsiC.text} ${pagiSatuan.value})",      
+        "siang": "${siangC.text} (${siangPorsiC.text} ${siangSatuan.value})",
+        "malam": "${malamC.text} (${malamPorsiC.text} ${malamSatuan.value})",
 
-      // 4. Mengirim base64 foto makanan ke rekomendasi (untuk nanti disimpan ke riwayat)
-      "foto_pagi": pagiBase64.value,
-      "foto_siang": siangBase64.value,
-      "foto_malam": malamBase64.value,
-    };
+        "foto_pagi": pagiBase64.value,
+        "foto_siang": siangBase64.value,
+        "foto_malam": malamBase64.value,
+      };
 
-    // Pindah halaman dengan membawa rekapData
-    Get.toNamed(
-      Routes.REKOMENDASI,
-      arguments: rekapData,
-    );
+      Get.toNamed(
+        Routes.REKOMENDASI,
+        arguments: rekapData,
+      );
 
     } catch (e) {
       Get.back();
@@ -296,23 +280,22 @@ class InputController extends GetxController {
     }
   }
 
-  // Helper function untuk POST request ke Flask
+  // Helper function menggunakan POST request via ApiService terpusat
   Future<Map<String, dynamic>?> _tembakApiGizi(String nama, String porsi, String satuan) async {
-    final respon = await http.post(
-      Uri.parse("$baseUrl/api/hitung-gizi"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
+    // MEMPERBAIKAI: Mengalihkan request ke ApiService terpusat
+    final respon = await _api.post(
+      '/api/hitung-gizi',
+      {
         "nama_makanan": nama,
         "jumlah_porsi": porsi,
         "satuan": satuan,
-      }),
+      },
     );
 
-    if (respon.statusCode == 200) {
-      var jsonRes = jsonDecode(respon.body);
-      return jsonRes['data'];
+    if (respon.statusCode == 200 && respon.body != null) {
+      return respon.body['data'];
     } else {
-      var msg = jsonDecode(respon.body)['message'] ?? "Gagal memproses data";
+      var msg = respon.body != null ? respon.body['message'] : "Gagal memproses data";
       throw "Makanan '$nama' bermasalah: $msg";
     }
   }

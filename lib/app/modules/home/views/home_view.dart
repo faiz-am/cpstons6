@@ -25,16 +25,14 @@ class HomeView extends StatelessWidget {
       final isNormal = latest == null || latest.statusKondisi == 'Normal';
       final score = latest == null ? 0 : latest.skor;
 
+      // Logika deteksi klinis dari database MySQL melalui controller
+      final isObesitasRiil = controller.statusKesehatan.value == "Obesitas";
+
       return Scaffold(
         backgroundColor: scaffoldBg,
         floatingActionButton: FloatingActionButton(
           backgroundColor: accentColor,
-          onPressed: () {
-            Get.bottomSheet(
-              _chatBot(cardBg, textMain, textMuted, isDark),
-              isScrollControlled: true,
-            );
-          },
+          onPressed: () => Get.toNamed(Routes.CHATBOT), // Pindah ke halaman ChatbotView
           child: const Icon(
             Icons.chat,
             color: Colors.white,
@@ -64,26 +62,32 @@ class HomeView extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Halo, ${controller.displayName.value}! 👋",
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w700,
-                                  color: textMain,
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Halo, ${controller.displayName.value}! 👋",
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w700,
+                                    color: textMain,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                "Pantau aktivitas sehat harianmu.",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: textMuted,
+                                const SizedBox(height: 4),
+                                Text(
+                                  "Pantau aktivitas sehat harianmu.",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: textMuted,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                           IconButton(
                             icon: Icon(Icons.refresh, color: accentColor),
@@ -94,7 +98,7 @@ class HomeView extends StatelessWidget {
 
                       const SizedBox(height: 20),
 
-                      // Loading Overlay or Overview Card
+                      // Overview Card
                       if (controller.isLoading.value && latest == null)
                         Container(
                           height: 200,
@@ -108,12 +112,12 @@ class HomeView extends StatelessWidget {
                           ),
                         )
                       else
-                        _overviewCard(cardBg, textMain, textMuted, isDark, score, latest),
+                        _overviewCard(cardBg, textMain, textMuted, isDark, score, latest, isObesitasRiil),
 
                       const SizedBox(height: 18),
 
                       // AI Recommendation Card
-                      _insightCard(isNormal, latest),
+                      _insightCard(isNormal, latest, isObesitasRiil, controller),
 
                       const SizedBox(height: 18),
 
@@ -123,7 +127,7 @@ class HomeView extends StatelessWidget {
                         const SizedBox(height: 18),
                       ],
 
-                      // Grid of Nutrients
+                      // Grid of Nutrients Row 1
                       Row(
                         children: [
                           Expanded(
@@ -131,8 +135,8 @@ class HomeView extends StatelessWidget {
                               title: "Protein",
                               value: latest != null ? "${latest.protein.toStringAsFixed(1)} g" : "0.0 g",
                               subtitle: latest != null 
-                                  ? "${(latest.protein / 60 * 100).toStringAsFixed(0)}% dari target 60g"
-                                  : "Target: 60g",
+                                  ? "${(latest.protein / ((controller.targetKalori.value * 0.15) / 4) * 100).toStringAsFixed(0)}% dari target ${((controller.targetKalori.value * 0.15) / 4).toStringAsFixed(0)}g"
+                                  : "Target: ${((controller.targetKalori.value * 0.15) / 4).toStringAsFixed(0)}g",
                               icon: Icons.egg_alt_outlined,
                               cardBg: cardBg,
                               textMain: textMain,
@@ -145,8 +149,8 @@ class HomeView extends StatelessWidget {
                               title: "Karbohidrat",
                               value: latest != null ? "${latest.karbohidrat.toStringAsFixed(1)} g" : "0.0 g",
                               subtitle: latest != null 
-                                  ? "${(latest.karbohidrat / 300 * 100).toStringAsFixed(0)}% dari target 300g"
-                                  : "Target: 300g",
+                                  ? "${(latest.karbohidrat / ((controller.targetKalori.value * 0.55) / 4) * 100).toStringAsFixed(0)}% dari target ${((controller.targetKalori.value * 0.55) / 4).toStringAsFixed(0)}g"
+                                  : "Target: ${((controller.targetKalori.value * 0.55) / 4).toStringAsFixed(0)}g",
                               icon: Icons.rice_bowl_outlined,
                               cardBg: cardBg,
                               textMain: textMain,
@@ -158,6 +162,7 @@ class HomeView extends StatelessWidget {
 
                       const SizedBox(height: 12),
 
+                      // Grid of Nutrients Row 2
                       Row(
                         children: [
                           Expanded(
@@ -165,8 +170,8 @@ class HomeView extends StatelessWidget {
                               title: "Lemak",
                               value: latest != null ? "${latest.lemak.toStringAsFixed(1)} g" : "0.0 g",
                               subtitle: latest != null 
-                                  ? "${(latest.lemak / 65 * 100).toStringAsFixed(0)}% dari target 65g"
-                                  : "Target: 65g",
+                                  ? "${(latest.lemak / ((controller.targetKalori.value * 0.30) / 9) * 100).toStringAsFixed(0)}% dari target ${((controller.targetKalori.value * 0.30) / 9).toStringAsFixed(0)}g"
+                                  : "Target: ${((controller.targetKalori.value * 0.30) / 9).toStringAsFixed(0)}g",
                               icon: Icons.cookie_outlined,
                               cardBg: cardBg,
                               textMain: textMain,
@@ -180,7 +185,9 @@ class HomeView extends StatelessWidget {
                               value: latest != null 
                                   ? "${latest.sodium.toStringAsFixed(0)}mg / ${latest.gula.toStringAsFixed(1)}g"
                                   : "0mg / 0g",
-                              subtitle: "Batasan garam & gula harian",
+                              subtitle: isObesitasRiil
+                                  ? "Restriksi Medis: Max 2000mg / 25g Gula"
+                                  : "Batasan garam & gula harian G4-L1-S5",
                               icon: Icons.grain_outlined,
                               cardBg: cardBg,
                               textMain: textMain,
@@ -188,6 +195,55 @@ class HomeView extends StatelessWidget {
                             ),
                           ),
                         ],
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // KARTU REFERENSI MEDIS LAYAR UTAMA
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: cardBg,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isDark ? const Color(0xff1e293b) : Colors.grey.shade200,
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.verified_user_outlined, color: Colors.green, size: 20),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Standar Referensi Klinis Kontrol Gizi:",
+                                    style: TextStyle(
+                                      fontSize: 12, 
+                                      fontWeight: FontWeight.bold, 
+                                      color: textMain
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    "• Proporsi Kalori Makro: Karbohidrat 55%, Protein 15%, Lemak 30% (Permenkes RI No. 28 Tahun 2019).\n"
+                                    "• Batasan Gula & Garam: Standar Edukasi G4-L1-S5 Kemenkes RI.\n"
+                                    "• Intervensi Obesitas: Restriksi Energi Eksogen & Pembatasan Gula Bebas <5% Target Kalori (Panduan Diet Reduksi WHO).",
+                                    style: TextStyle(
+                                      fontSize: 11, 
+                                      color: textMuted,
+                                      height: 1.4
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
 
                       const SizedBox(height: 24),
@@ -209,15 +265,18 @@ class HomeView extends StatelessWidget {
     bool isDark,
     int score,
     dynamic latest,
+    bool isObesitasRiil,
   ) {
+    final controller = Get.find<HomeController>();
     final hasData = latest != null;
     final isNormal = !hasData || latest.statusKondisi == 'Normal';
-    final progressVal = hasData ? (latest.kalori / 2000.0).clamp(0.0, 1.0) : 0.0;
     
-    // Dynamic score ring color
+    final double targetDinamis = controller.targetKalori.value.toDouble();
+    final progressVal = hasData ? (latest.kalori / targetDinamis).clamp(0.0, 1.0) : 0.0;
+    
     final Color ringColor = !hasData 
         ? Colors.grey.shade400
-        : (isNormal ? const Color(0xff10b981) : const Color(0xffef4444));
+        : (isObesitasRiil ? const Color(0xffef4444) : (isNormal ? const Color(0xff10b981) : const Color(0xffef4444)));
 
     return Container(
       width: double.infinity,
@@ -236,14 +295,19 @@ class HomeView extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                "Daily Overview",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: textMain,
+              Flexible(
+                child: Text(
+                  "Daily Overview",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: textMain,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
               ),
+              const SizedBox(width: 8),
               Chip(
                 backgroundColor: isDark ? const Color(0xff1e293b) : const Color(0xffeff6ff),
                 side: BorderSide.none,
@@ -264,13 +328,13 @@ class HomeView extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 110,
-                height: 110,
+                width: 96,
+                height: 96,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: ringColor,
-                    width: 7,
+                    width: 6,
                   ),
                 ),
                 child: Center(
@@ -280,7 +344,7 @@ class HomeView extends StatelessWidget {
                       Text(
                         hasData ? "$score" : "-",
                         style: TextStyle(
-                          fontSize: 30,
+                          fontSize: 24,
                           fontWeight: FontWeight.w800,
                           color: textMain,
                         ),
@@ -298,7 +362,7 @@ class HomeView extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(width: 20),
+              const SizedBox(width: 14),
 
               Expanded(
                 child: Column(
@@ -312,11 +376,9 @@ class HomeView extends StatelessWidget {
                     const SizedBox(height: 12),
                     _MetricItem(
                       icon: Icons.health_and_safety_outlined,
-                      title: "Kondisi Tubuh",
-                      value: hasData ? latest.statusKondisi : "Belum terinput",
-                      valueColor: hasData 
-                          ? (isNormal ? const Color(0xff10b981) : const Color(0xffef4444))
-                          : null,
+                      title: "Kondisi Gizi Klinis",
+                      value: controller.statusKesehatan.value,
+                      valueColor: isObesitasRiil ? const Color(0xffef4444) : const Color(0xff10b981),
                     ),
                   ],
                 ),
@@ -326,7 +388,6 @@ class HomeView extends StatelessWidget {
 
           if (hasData) ...[
             const SizedBox(height: 20),
-            // Progress Bar Target Kalori
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -359,8 +420,14 @@ class HomeView extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "Benchmarking 2,000 kcal",
-                  style: TextStyle(color: textMuted, fontSize: 11),
+                  isObesitasRiil
+                      ? "Target Klinis Terkalibrasi: ${controller.targetKalori.value} kcal (Defisit)"
+                      : "Target Kalori Klinis Anda: ${controller.targetKalori.value} kcal",
+                  style: TextStyle(
+                    color: textMuted, 
+                    fontSize: 11,
+                    fontStyle: isObesitasRiil ? FontStyle.italic : FontStyle.normal,
+                  ),
                 ),
               ],
             ),
@@ -390,14 +457,15 @@ class HomeView extends StatelessWidget {
     );
   }
 
-  Widget _insightCard(bool isNormal, dynamic latest) {
+  Widget _insightCard(bool isNormal, dynamic latest, bool isObesitasRiil, HomeController controller) {
     final hasData = latest != null;
-    final Color startColor = !hasData 
-        ? const Color(0xff64748b)
-        : (isNormal ? const Color(0xff2563eb) : const Color(0xffef4444));
-    final Color endColor = !hasData
-        ? const Color(0xff475569)
-        : (isNormal ? const Color(0xff3b82f6) : const Color(0xfff87171));
+    
+    final Color startColor = isObesitasRiil 
+        ? const Color(0xffef4444)
+        : (!hasData ? const Color(0xff64748b) : const Color(0xff2563eb));
+    final Color endColor = isObesitasRiil 
+        ? const Color(0xfff87171)
+        : (!hasData ? const Color(0xff475569) : const Color(0xff3b82f6));
 
     return Container(
       width: double.infinity,
@@ -420,14 +488,14 @@ class HomeView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
-            Icons.lightbulb_outline,
+          Icon(
+            isObesitasRiil ? Icons.warning_amber_outlined : Icons.lightbulb_outline,
             color: Colors.white,
             size: 26,
           ),
           const SizedBox(height: 14),
           Text(
-            hasData ? "Rekomendasi Gizi AI" : "Morning Insight",
+            isObesitasRiil ? "Peringatan Diet Klinis" : (hasData ? "Rekomendasi Gizi" : "Morning Insight"),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 18,
@@ -436,9 +504,11 @@ class HomeView extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            hasData 
-                ? latest.rekomendasi 
-                : "Belum ada riwayat gizi hari ini. Lengkapi menu makanan pagi, siang, dan malam agar AI dapat menyusun analisis gizi & rekomendasi kesehatan yang dipersonalisasi untuk Anda.",
+            isObesitasRiil
+                ? "Sistem mendeteksi tubuh Anda berada dalam kategori Obesitas. Batasi asupan harian maksimal ${controller.targetKalori.value} kcal, kurangi makanan bersodium/lemak jenuh tinggi, serta tingkatkan konsumsi serat makro."
+                : (hasData 
+                    ? latest.rekomendasi 
+                    : "Belum ada riwayat gizi hari ini. Lengkapi menu makanan pagi, siang, dan malam agar sistem dapat menyusun analisis gizi & rekomendasi kesehatan yang dipersonalisasi untuk Anda."),
             style: const TextStyle(
               color: Colors.white70,
               fontSize: 14,
@@ -630,260 +700,6 @@ class HomeView extends StatelessWidget {
               fontSize: 11,
               color: textMuted,
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBubble(ChatMessage msg, Color textMain, bool isDark) {
-    final alignment = msg.isUser ? Alignment.topRight : Alignment.topLeft;
-    final bubbleBg = msg.isUser 
-        ? const Color(0xff2563eb) 
-        : (isDark ? const Color(0xff1e293b) : const Color(0xfff1f5f9));
-    final bubbleTextColor = msg.isUser 
-        ? Colors.white 
-        : textMain;
-    final borderRadius = msg.isUser 
-        ? const BorderRadius.only(
-            topLeft: Radius.circular(16),
-            topRight: Radius.circular(16),
-            bottomLeft: Radius.circular(16),
-          )
-        : const BorderRadius.only(
-            topLeft: Radius.circular(16),
-            topRight: Radius.circular(16),
-            bottomRight: Radius.circular(16),
-          );
-
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      child: Align(
-        alignment: alignment,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: bubbleBg,
-            borderRadius: borderRadius,
-          ),
-          constraints: BoxConstraints(maxWidth: Get.width * 0.75),
-          child: Text(
-            msg.text,
-            style: TextStyle(
-              color: bubbleTextColor,
-              fontSize: 13.5,
-              height: 1.35,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTypingIndicator(Color textMuted, bool isDark) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      child: Align(
-        alignment: Alignment.topLeft,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xff1e293b) : const Color(0xfff1f5f9),
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(16),
-              topRight: Radius.circular(16),
-              bottomRight: Radius.circular(16),
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 10,
-                height: 10,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(textMuted),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                "Sedang mengetik...",
-                style: TextStyle(
-                  color: textMuted,
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSuggestionChips(HomeController controller, Color textMain, bool isDark) {
-    final chipBg = isDark ? const Color(0xff1e293b) : const Color(0xffe2e8f0);
-    final suggestions = [
-      "Makanan Sehat 🥬",
-      "Tips Diet 🏃‍♂️",
-      "Kontrol Gula 🍚",
-      "Batasi Garam 🧂",
-      "Fitur App 🩺",
-    ];
-
-    return Container(
-      height: 38,
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: suggestions.length,
-        itemBuilder: (context, idx) {
-          final suggestion = suggestions[idx];
-          return Padding(
-            padding: const EdgeInsets.only(right: 6),
-            child: ActionChip(
-              label: Text(
-                suggestion,
-                style: TextStyle(
-                  color: textMain,
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              backgroundColor: chipBg,
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-                side: BorderSide.none,
-              ),
-              onPressed: () {
-                controller.sendMessage(suggestion);
-              },
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _chatBot(Color cardBg, Color textMain, Color textMuted, bool isDark) {
-    final controller = Get.find<HomeController>();
-    final c = TextEditingController();
-    final scrollController = ScrollController();
-
-    // Auto-scroll on new message
-    ever(controller.chatMessages, (_) {
-      Future.delayed(const Duration(milliseconds: 100), () {
-        if (scrollController.hasClients) {
-          scrollController.animateTo(
-            scrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOut,
-          );
-        }
-      });
-    });
-
-    return Container(
-      height: Get.height * 0.7,
-      padding: const EdgeInsets.fromLTRB(18, 12, 18, 18),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(24),
-        ),
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 42,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          Text(
-            "Chatbot Kesehatan",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: textMain,
-            ),
-          ),
-
-          const SizedBox(height: 14),
-
-          // Message history list
-          Expanded(
-            child: Obx(() {
-              return ListView.builder(
-                controller: scrollController,
-                physics: const BouncingScrollPhysics(),
-                itemCount: controller.chatMessages.length + (controller.isTyping.value ? 1 : 0),
-                itemBuilder: (context, idx) {
-                  if (idx < controller.chatMessages.length) {
-                    final msg = controller.chatMessages[idx];
-                    return _buildBubble(msg, textMain, isDark);
-                  } else {
-                    return _buildTypingIndicator(textMuted, isDark);
-                  }
-                },
-              );
-            }),
-          ),
-
-          const SizedBox(height: 8),
-
-          // Suggestion Chips
-          _buildSuggestionChips(controller, textMain, isDark),
-
-          // Input Row
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: c,
-                  style: TextStyle(color: textMain),
-                  textInputAction: TextInputAction.send,
-                  onSubmitted: (val) {
-                    if (val.trim().isNotEmpty) {
-                      controller.sendMessage(val);
-                      c.clear();
-                    }
-                  },
-                  decoration: InputDecoration(
-                    hintText: "Tulis pesan...",
-                    hintStyle: const TextStyle(color: Colors.grey),
-                    filled: true,
-                    fillColor: isDark ? const Color(0xff080c14) : const Color(0xfff1f5f9),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                onPressed: () {
-                  final val = c.text;
-                  if (val.trim().isNotEmpty) {
-                    controller.sendMessage(val);
-                    c.clear();
-                  }
-                },
-                icon: const Icon(
-                  Icons.send,
-                  color: Color(0xff2563eb),
-                ),
-              ),
-            ],
           ),
         ],
       ),
