@@ -1,21 +1,19 @@
 import 'dart:convert';
-
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
-
 import '../../../data/models/tip_model.dart';
+import '../../../data/services/api_service.dart'; // Import ApiService terpusat kamu
 
 class InsightController extends GetxController {
-
   var isLoading = false.obs;
   var tips = <TipModel>[].obs;
+
+  // MEMPERBAIKAI: Menggunakan ApiService global terpusat
+  final ApiService _api = Get.find<ApiService>();
 
   @override
   void onInit() {
     super.onInit();
-    // Load local fallback tips immediately so they display instantly
     _loadLocalTips();
-    // Fetch latest tips from backend in the background
     fetchTips();
   }
 
@@ -44,23 +42,20 @@ class InsightController extends GetxController {
 
   Future<void> fetchTips() async {
     try {
-      // Hanya tampilkan spinner jika data tips kosong
       if (tips.isEmpty) {
         isLoading.value = true;
       }
 
-      // Gunakan IP 10.0.2.2 untuk emulator Android agar bisa terhubung ke localhost host OS
-      final domain = (GetPlatform.isAndroid && !GetPlatform.isWeb) ? '10.0.2.2:5000' : '127.0.0.1:5000';
-      final url = 'http://$domain/api/tips';
+      print("Fetching tips from terpusat: ${_api.baseUrl}/api/tips");
 
-      print("Fetching tips from: $url");
-
-      final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 3));
+      // MEMPERBAIKAI: Ganti request http lama ke _api.get dan naikkan timeout ke 10 detik
+      // Ini akan menyembuhkan TimeoutException saat tarikan awal server
+      final response = await _api.get('/api/tips').timeout(const Duration(seconds: 10));
 
       print("Tips response status: ${response.statusCode}");
 
-      if (response.statusCode == 200) {
-        final List<dynamic> jsonData = jsonDecode(response.body);
+      if (response.statusCode == 200 && response.body != null) {
+        final List<dynamic> jsonData = response.body;
         if (jsonData.isNotEmpty) {
           tips.value = jsonData.map((e) => TipModel.fromJson(e)).toList();
           print("Loaded ${tips.length} tips from API successfully");

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sehat_app/app/modules/auth/controllers/auth_controller.dart';
+import '../../../data/services/api_service.dart';
 
 class ProfileSettingsView extends StatefulWidget {
   const ProfileSettingsView({super.key});
@@ -13,6 +14,9 @@ class ProfileSettingsView extends StatefulWidget {
 
 class _ProfileSettingsViewState extends State<ProfileSettingsView> {
   final auth = Get.find<AuthController>();
+  
+  // Ambil instansi ApiService terpusat
+  final ApiService _api = Get.find<ApiService>();
   
   final nameController = TextEditingController();
   final phoneController = TextEditingController();
@@ -27,21 +31,38 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
 
   @override
   void initState() {
-    super.initState();
-    _loadProfileData();
+    super.initState(); // 🟢 SUDAH DIPERBAIKI
+    _loadProfileData(); 
   }
 
+  // =========================================================================
+  // Ambil data awal dari Lokal, jika kosong fallback dari API Backend
+  // =========================================================================
   Future<void> _loadProfileData() async {
     try {
       final email = auth.userEmail.value;
       if (email.isEmpty) return;
 
-      final name = await auth.storage.read(key: "${email}_profile_name") ?? "";
-      final phone = await auth.storage.read(key: "${email}_profile_phone") ?? "";
-      final age = await auth.storage.read(key: "${email}_profile_age") ?? "";
-      final height = await auth.storage.read(key: "${email}_profile_height") ?? "";
-      final weight = await auth.storage.read(key: "${email}_profile_weight") ?? "";
+      // Baca cache lokal terlebih dahulu
+      String name = await auth.storage.read(key: "${email}_profile_name") ?? "";
+      String phone = await auth.storage.read(key: "${email}_profile_phone") ?? "";
+      String age = await auth.storage.read(key: "${email}_profile_age") ?? "";
+      String height = await auth.storage.read(key: "${email}_profile_height") ?? "";
+      String weight = await auth.storage.read(key: "${email}_profile_weight") ?? "";
       final imageBase64 = await auth.storage.read(key: "${email}_profile_image") ?? "";
+
+      // Jika data fisik di lokal kosong, ambil dari Backend Flask
+      if (name.isEmpty && age.isEmpty) {
+        final response = await _api.get('/api/ambil-profil?username=$email');
+        if (response.statusCode == 200 && response.body != null && response.body['success'] == true) {
+          final dataDb = response.body['data'];
+          name = dataDb['nama']?.toString() ?? "";
+          phone = dataDb['telepon']?.toString() ?? "";
+          age = dataDb['umur']?.toString() ?? "";
+          height = dataDb['tinggi']?.toString() ?? "";
+          weight = dataDb['berat']?.toString() ?? "";
+        }
+      }
 
       setState(() {
         nameController.text = name;
@@ -56,6 +77,9 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
     }
   }
 
+  // =========================================================================
+  // Simpan data ke Lokal DAN Tembak API ke Server MySQL
+  // =========================================================================
   Future<void> _saveProfileData() async {
     try {
       setState(() => _isLoading = true);
@@ -65,6 +89,7 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
         throw Exception("Email pengguna tidak ditemukan. Silakan login kembali.");
       }
 
+      // 1. Simpan ke Lokal HP untuk loading super cepat (Cache)
       await auth.storage.write(key: "${email}_profile_name", value: nameController.text.trim());
       await auth.storage.write(key: "${email}_profile_phone", value: phoneController.text.trim());
       await auth.storage.write(key: "${email}_profile_age", value: ageController.text.trim());
@@ -75,25 +100,44 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
         await auth.storage.write(key: "${email}_profile_image", value: _base64Image);
       }
 
-      setState(() {
-        _isLoading = false;
-        isEditingPersonal = false;
-        isEditingPhysical = false;
-      });
-
-      Get.snackbar(
-        "Profil Disimpan",
-        "Perubahan profil Anda berhasil disimpan secara aman.",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: const Color(0xff10b981),
-        colorText: Colors.white,
-        duration: const Duration(seconds: 2),
+      // 2. Tembak API ke Backend Flask agar tersimpan di MySQL
+      final response = await _api.post(
+        '/api/update-profil', 
+        {
+          "username": email,
+          "nama": nameController.text.trim(),
+          "telepon": phoneController.text.trim(),
+          "umur": int.tryParse(ageController.text.trim()) ?? 0,
+          "tinggi": double.tryParse(heightController.text.trim()) ?? 0.0,
+          "berat": double.tryParse(weightController.text.trim()) ?? 0.0,
+        },
       );
+
+      setState(() => _isLoading = false);
+
+      if (response.statusCode == 200) {
+        setState(() {
+          isEditingPersonal = false;
+          isEditingPhysical = false;
+        });
+
+        Get.snackbar(
+          "Profil Disimpan",
+          "Perubahan data klinis Anda berhasil disinkronkan ke server.",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xff10b981),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 2),
+        );
+      } else {
+        String msg = response.body != null ? response.body['message'] : "Gagal sinkron server.";
+        throw msg;
+      }
     } catch (e) {
       setState(() => _isLoading = false);
       Get.snackbar(
         "Gagal Menyimpan",
-        "Terjadi kesalahan saat menyimpan data: $e",
+        "Terjadi kesalahan sinkronisasi: $e",
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -372,19 +416,22 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
                           ],
                         ),
                         const SizedBox(height: 12),
+                        // 🟢 ROW DIPERBAIKI MENGGUNAKAN FLEX AGAR TIDAK TERPOTONG
                         Row(
                           children: [
                             Expanded(
+                              flex: 3,
                               child: _buildInputField(
-                                label: "Umur (Tahun)",
+                                label: "Umur (Thn)", // Disinkatkan
                                 controller: ageController,
                                 icon: Icons.calendar_today_outlined,
                                 keyboardType: TextInputType.number,
                                 isDark: isDark,
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 8),
                             Expanded(
+                              flex: 3,
                               child: _buildInputField(
                                 label: "Tinggi (Cm)",
                                 controller: heightController,
@@ -393,8 +440,9 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
                                 isDark: isDark,
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 8),
                             Expanded(
+                              flex: 3,
                               child: _buildInputField(
                                 label: "Berat (Kg)",
                                 controller: weightController,
@@ -607,7 +655,7 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
         Text(
           label,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: FontWeight.w600,
             color: isDark ? Colors.white60 : const Color(0xff64748b),
           ),
@@ -618,15 +666,15 @@ class _ProfileSettingsViewState extends State<ProfileSettingsView> {
           keyboardType: keyboardType,
           style: TextStyle(
             color: isDark ? Colors.white : const Color(0xff0f172a),
-            fontSize: 14,
+            fontSize: 13,
           ),
           decoration: InputDecoration(
-            prefixIcon: Icon(icon, color: const Color(0xff2563eb), size: 18),
-            hintText: "Isi ${label.toLowerCase()}",
+            prefixIcon: Icon(icon, color: const Color(0xff2563eb), size: 16),
+            hintText: "Isi",
             hintStyle: const TextStyle(color: Colors.grey, fontSize: 13),
             filled: true,
             fillColor: isDark ? const Color(0xff080c14) : const Color(0xfff8fafc),
-            contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
