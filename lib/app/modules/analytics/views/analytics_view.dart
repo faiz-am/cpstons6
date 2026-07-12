@@ -171,15 +171,6 @@ class AnalyticsView extends StatelessWidget {
     final history = controller.userHistoryList;
     if (history.isEmpty) return _emptyBox(cardBg, borderColor, textMuted, "Grafik Internal: Tren Skor Sehat");
 
-    double maxCal = 600.0;
-    for (var f in foods) {
-      final cal = (f['calories'] as num?)?.toDouble() ?? 0.0;
-      if (cal > maxCal) {
-        maxCal = cal;
-      }
-    }
-    final double computedMaxY = ((maxCal * 1.15) / 100).ceil() * 100.0;
-
     return Container(
       height: 300,
       padding: const EdgeInsets.all(16),
