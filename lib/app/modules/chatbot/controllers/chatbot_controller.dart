@@ -60,7 +60,7 @@ class ChatbotController extends GetxController {
 
     try {
       final response = await _api.post(
-        '/chat',
+        '/api/chat',
         {'message': message},
       );
 
